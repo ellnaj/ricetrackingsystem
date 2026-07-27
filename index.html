@@ -1,0 +1,2039 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JLY Rice Choice — Rice Tracking System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+:root{
+  --green-900:#12261a;
+  --green-800:#1c3a26;
+  --green-700:#234a2f;
+  --green-600:#2e5c3a;
+  --gold-600:#b4842a;
+  --gold-500:#c99a2e;
+  --gold-400:#dab254;
+  --cream-100:#faf7ef;
+  --cream-200:#f3ede0;
+  --paper:#ffffff;
+  --ink-900:#20241f;
+  --ink-600:#5c6259;
+  --ink-400:#8b9086;
+  --line:#e7e0cf;
+  --danger:#b3452f;
+  --danger-bg:#fbe9e4;
+  --ok:#2e6b3e;
+  --ok-bg:#e6f0e6;
+  --radius-lg:18px;
+  --radius-md:12px;
+  --radius-sm:8px;
+  --shadow-1: 0 1px 2px rgba(18,38,26,0.06), 0 6px 20px rgba(18,38,26,0.06);
+  --shadow-2: 0 10px 30px rgba(18,38,26,0.14);
+  --sidebar-w: 250px;
+}
+*,*::before,*::after{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:'Inter',system-ui,sans-serif;
+  background: var(--cream-100);
+  color:var(--ink-900);
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.display{font-family:'Fraunces',serif;}
+button{font-family:inherit;}
+input,select,textarea{font-family:inherit;}
+::selection{background:var(--gold-400);color:var(--green-900);}
+a{color:inherit;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:#d8cfb4;border-radius:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+/* ===== Layout shell ===== */
+#app{display:flex; min-height:100vh;}
+
+/* ===== Sidebar ===== */
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  background:linear-gradient(175deg, var(--green-800), var(--green-900) 85%);
+  color:#f4f1e6;
+  display:flex;
+  flex-direction:column;
+  position:fixed;
+  top:0;left:0;bottom:0;
+  z-index:60;
+  transition:transform .28s ease;
+  overflow-y:auto;
+}
+.sidebar-brand{
+  display:flex; align-items:center; justify-content:center;
+  padding:26px 20px 18px;
+}
+.brand-mark{
+  width:136px;height:136px;border-radius:50%;
+  background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  box-shadow: 0 0 0 2px rgba(255,255,255,.35);
+  flex-shrink:0;
+}
+.brand-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+
+.nav-group{list-style:none; margin:6px 0; padding:0 12px; flex:1;}
+.nav-group li + li{margin-top:2px;}
+.nav-link{
+  display:flex; align-items:center; gap:12px;
+  padding:11px 14px; border-radius:10px;
+  color:#e7e5d6; text-decoration:none; font-size:14.5px; font-weight:500;
+  cursor:pointer; border:none; background:none; width:100%; text-align:left;
+  transition:background .15s ease, color .15s ease;
+}
+.nav-link .ic{width:19px;height:19px;flex-shrink:0;opacity:.9;}
+.nav-link:hover{background:rgba(255,255,255,0.08);}
+.nav-link.active{background:var(--cream-100); color:var(--green-800); font-weight:700; box-shadow:var(--shadow-1);}
+.nav-link.active .ic{opacity:1;}
+.nav-divider{height:1px; background:rgba(255,255,255,0.1); margin:10px 18px;}
+
+.sidebar-foot{
+  margin-top:auto; padding:14px 12px 18px;
+  position:relative;
+}
+.sidebar-decor{
+  position:absolute; right:-10px; bottom:0; width:150px; height:150px;
+  opacity:.16; pointer-events:none;
+}
+
+.sidebar-scrim{display:none;}
+
+/* ===== Main ===== */
+.main{
+  margin-left:var(--sidebar-w);
+  flex:1;
+  min-width:0;
+  display:flex; flex-direction:column;
+}
+.topbar{
+  position:sticky; top:0; z-index:40;
+  background:rgba(250,247,239,.92); backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 28px; gap:16px; flex-wrap:wrap;
+}
+.topbar-left{display:flex;align-items:center;gap:14px;min-width:0;}
+.hamburger{
+  display:none; background:var(--paper); border:1px solid var(--line); border-radius:10px;
+  width:40px;height:40px; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+}
+.hamburger span, .hamburger span::before, .hamburger span::after{
+  display:block; width:18px; height:2px; background:var(--ink-900); border-radius:2px; position:relative;
+}
+.hamburger span::before{content:"";position:absolute;top:-6px;}
+.hamburger span::after{content:"";position:absolute;top:6px;}
+.page-title h1{font-size:24px; margin:0; font-weight:600; color:var(--green-900);}
+.page-title p{margin:2px 0 0; color:var(--ink-600); font-size:13.5px;}
+.topbar-right{display:flex; align-items:center; gap:10px;}
+.pill{
+  display:flex; align-items:center; gap:8px;
+  background:var(--paper); border:1px solid var(--line); border-radius:12px;
+  padding:9px 14px; font-size:13.5px; font-weight:500; color:var(--ink-900);
+}
+.pill .ic{width:16px;height:16px;color:var(--green-700);}
+.admin-pill{cursor:default;}
+.admin-avatar{width:24px;height:24px;border-radius:50%;background:var(--green-700);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;overflow:hidden;flex-shrink:0;}
+.admin-avatar img{width:100%;height:100%;object-fit:cover;display:block;}
+
+.content{padding:24px 28px 60px;}
+.page{display:none;}
+.page.active{display:block; animation:fadein .25s ease;}
+@keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+/* ===== Cards / grid ===== */
+.stat-grid{display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:18px; margin-bottom:22px;}
+.card{
+  background:var(--paper); border-radius:var(--radius-lg); border:1px solid var(--line);
+  box-shadow:var(--shadow-1);
+}
+.stat-card{padding:20px; display:flex; flex-direction:column; gap:12px;}
+.stat-top{display:flex; align-items:center; gap:12px;}
+.stat-icon{
+  width:42px;height:42px;border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.stat-icon.green{background:var(--green-700); color:#f4f1e6;}
+.stat-icon.gold{background:var(--gold-500); color:#3a2c0c;}
+.stat-icon svg{width:20px;height:20px;}
+.stat-label{font-size:12.5px; letter-spacing:.4px; text-transform:uppercase; color:var(--ink-600); font-weight:700;}
+.stat-value{font-family:'Fraunces',serif; font-size:26px; font-weight:600; color:var(--green-900); display:flex; align-items:baseline; gap:5px;}
+.stat-value .unit{font-family:'Inter'; font-size:13px; color:var(--ink-600); font-weight:500;}
+.stat-trend{font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:4px;}
+.stat-trend.up{color:var(--ok);}
+.stat-trend.muted{color:var(--ink-400); font-weight:500;}
+
+.grid-2{display:grid; grid-template-columns:1.7fr 1fr; gap:18px; align-items:stretch; margin-bottom:22px;}
+.panel{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-1); padding:20px;}
+.panel-head{display:flex; align-items:center; justify-content:between; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap;}
+.panel-head h3{margin:0; font-size:16.5px; color:var(--green-900); font-weight:600;}
+.link-btn{background:none;border:none;color:var(--gold-600); font-weight:700; font-size:13px; cursor:pointer; padding:4px 2px;}
+.link-btn:hover{text-decoration:underline;}
+
+select.range-select, .select-native{
+  border:1px solid var(--line); background:var(--cream-100); border-radius:9px; padding:7px 10px;
+  font-size:13px; color:var(--ink-900); cursor:pointer;
+}
+
+.rank-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:4px;}
+.rank-item{display:flex; align-items:center; gap:12px; padding:10px 6px; border-radius:10px;}
+.rank-item:hover{background:var(--cream-100);}
+.rank-num{
+  width:24px;height:24px;border-radius:50%; background:var(--green-700); color:#fff; font-size:12px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.rank-item:nth-child(1) .rank-num{background:var(--gold-500); color:#3a2c0c;}
+.rank-name{flex:1; font-size:13.8px; font-weight:600; color:var(--ink-900); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.rank-val{font-size:13px; color:var(--ink-600); font-weight:600; flex-shrink:0;}
+.empty-note{color:var(--ink-400); font-size:13.5px; padding:14px 4px;}
+
+/* ===== Tables ===== */
+.table-wrap{overflow-x:auto; border-radius:var(--radius-md);}
+table{width:100%; border-collapse:collapse; font-size:13.8px; min-width:560px;}
+thead th{
+  text-align:left; padding:11px 14px; background:var(--cream-200); color:var(--ink-600);
+  font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; font-weight:700;
+  position:sticky; top:0;
+}
+thead th:first-child{border-top-left-radius:10px;}
+thead th:last-child{border-top-right-radius:10px;}
+tbody td{padding:12px 14px; border-bottom:1px solid var(--line); color:var(--ink-900); vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:#fbfaf5;}
+.badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:.3px;}
+.badge.sale{background:var(--ok-bg); color:var(--ok);}
+.badge.restock{background:#fdf1de; color:var(--gold-600);}
+.badge.danger{background:var(--danger-bg); color:var(--danger);}
+
+.stock-avail-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:12px;}
+.stock-avail-card{
+  border-radius:12px; padding:14px 16px; border:1px solid transparent;
+  display:flex; flex-direction:column; gap:4px; position:relative;
+}
+.stock-avail-card .sa-name{font-size:13px; font-weight:700; letter-spacing:.2px; padding-right:22px;}
+.stock-avail-card .sa-size{font-size:11.5px; font-weight:600; opacity:.75; text-transform:uppercase; letter-spacing:.4px;}
+.stock-avail-card .sa-qty{font-family:'Fraunces',serif; font-size:22px; font-weight:700; margin-top:4px;}
+.stock-avail-card .sa-qty .unit{font-family:'Inter'; font-size:12px; font-weight:600; margin-left:3px;}
+.sa-price-view{font-size:12.5px; font-weight:600; opacity:.85; margin-top:2px;}
+.stock-avail-card.sa-ok{background:var(--ok-bg); color:var(--ok); border-color:#cfe6cf;}
+.stock-avail-card.sa-low{background:var(--danger-bg); color:var(--danger); border-color:#f0c9bd;}
+.stock-avail-empty{color:var(--ink-400); font-size:13.5px; padding:14px 4px;}
+.sa-edit-btn{
+  position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:7px;
+  border:1px solid currentColor; background:rgba(255,255,255,.55); color:inherit; opacity:.7;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+}
+.sa-edit-btn svg{width:13px;height:13px;}
+.sa-edit-btn:hover{opacity:1;}
+.sa-qty-edit{display:flex; flex-direction:column; gap:4px; margin-top:4px;}
+.sa-qty-edit[hidden]{display:none;}
+.sa-edit-label{font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; opacity:.75; margin-top:2px;}
+.sa-qty-input, .sa-price-input{
+  width:100%; padding:6px 8px; border-radius:8px; border:1px solid currentColor;
+  background:#fff; color:var(--ink-900); font-size:14px; font-weight:600;
+}
+.sa-edit-actions{display:flex; gap:6px; margin-top:2px;}
+.sa-save-btn, .sa-cancel-btn{
+  width:26px; height:26px; border-radius:7px; border:1px solid currentColor; background:rgba(255,255,255,.55);
+  color:inherit; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; flex-shrink:0;
+}
+.sa-save-btn svg, .sa-cancel-btn svg{width:14px;height:14px;}
+.sa-save-btn:hover{background:#fff;}
+.sa-cancel-btn:hover{background:#fff;}
+.row-actions{display:flex; gap:6px;}
+.icon-btn{
+  width:30px;height:30px; border-radius:8px; border:1px solid var(--line); background:var(--paper);
+  display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-600);
+}
+.icon-btn:hover{background:var(--cream-100); color:var(--green-800);}
+.icon-btn.danger:hover{background:var(--danger-bg); color:var(--danger); border-color:#f0c9bd;}
+.icon-btn:disabled{opacity:.4; cursor:not-allowed; background:var(--paper); color:var(--ink-400);}
+.icon-btn:disabled:hover{background:var(--paper); color:var(--ink-400);}
+.icon-btn svg{width:15px;height:15px;}
+
+/* ===== Buttons ===== */
+.btn{
+  display:inline-flex; align-items:center; gap:8px; justify-content:center;
+  border-radius:11px; padding:11px 18px; font-size:14px; font-weight:700; cursor:pointer; border:1px solid transparent;
+  transition:transform .1s ease, box-shadow .15s ease, background .15s ease;
+}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--green-700); color:#f4f1e6; box-shadow:var(--shadow-1);}
+.btn-primary:hover{background:var(--green-600);}
+.btn-gold{background:var(--gold-500); color:#3a2c0c;}
+.btn-gold:hover{background:var(--gold-400);}
+.btn-ghost{background:var(--paper); color:var(--ink-900); border-color:var(--line);}
+.btn-ghost:hover{background:var(--cream-100);}
+.btn-danger{background:var(--danger-bg); color:var(--danger); border-color:#f0c9bd;}
+.btn-danger:hover{background:#f6d9d0;}
+.btn-sm{padding:8px 13px; font-size:13px; border-radius:9px;}
+.btn svg{width:16px;height:16px;}
+.btn-block{width:100%;}
+
+/* ===== Forms ===== */
+.form-card{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-1); padding:22px; margin-bottom:20px;}
+.form-card h3{margin:0 0 4px; font-size:17px; color:var(--green-900);}
+.form-card .sub{margin:0 0 16px; color:var(--ink-600); font-size:13.5px;}
+.form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px;}
+.field{display:flex; flex-direction:column; gap:6px;}
+.field-highlight{
+  padding:10px 12px; border-radius:10px;
+  background:#fdf1de; border:1.5px solid var(--gold-500);
+}
+.field-highlight label{color:var(--gold-600); font-weight:700;}
+.field-highlight input{border-color:var(--gold-500); background:#fff;}
+.field label{font-size:12.5px; font-weight:700; color:var(--ink-600); text-transform:uppercase; letter-spacing:.3px;}
+.field input, .field select{
+  border:1px solid var(--line); border-radius:10px; padding:11px 12px; font-size:14px; background:var(--cream-100);
+  color:var(--ink-900); width:100%;
+}
+.field input:focus, .field select:focus, .btn:focus-visible, .nav-link:focus-visible, .icon-btn:focus-visible{
+  outline:3px solid rgba(201,154,46,.45); outline-offset:1px; background:var(--paper);
+}
+.field .hint{font-size:12px; color:var(--ink-400); font-weight:500; text-transform:none; letter-spacing:0;}
+.field-total{background:var(--cream-200); border-radius:10px; padding:11px 12px; font-weight:700; color:var(--green-900); font-size:15px;}
+.form-actions{display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;}
+
+.filter-bar{display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:16px;}
+
+.toast-wrap{position:fixed; bottom:22px; right:22px; z-index:200; display:flex; flex-direction:column; gap:10px;}
+.toast{
+  background:var(--green-900); color:#f4f1e6; padding:13px 18px; border-radius:12px; box-shadow:var(--shadow-2);
+  font-size:13.8px; font-weight:600; display:flex; align-items:center; gap:10px; min-width:220px;
+  animation:slidein .25s ease;
+}
+.toast.danger{background:var(--danger);}
+.toast .ic{width:16px;height:16px; flex-shrink:0;}
+@keyframes slidein{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(18,38,26,.45); z-index:150;
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  animation:fadein .18s ease;
+}
+.modal-box{background:var(--paper); border-radius:16px; padding:24px; max-width:400px; width:100%; box-shadow:var(--shadow-2);}
+.modal-box h3{margin:0 0 8px; color:var(--green-900);}
+.modal-box p{margin:0 0 18px; color:var(--ink-600); font-size:14px; line-height:1.5;}
+.modal-actions{display:flex; gap:10px; justify-content:flex-end;}
+
+.two-col{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+.small-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:18px;}
+.mini-stat{background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:var(--shadow-1);}
+.mini-stat.highlight{background:#fdf1de; border:1.5px solid var(--gold-500);}
+.mini-stat.highlight .val{color:var(--gold-600);}
+td.cell-highlight{background:#fdf1de; color:var(--gold-600); font-weight:800;}
+.mini-stat .lbl{font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-600); font-weight:700;}
+.mini-stat .val{font-family:'Fraunces',serif; font-size:22px; font-weight:600; color:var(--green-900); margin-top:4px;}
+
+.chip-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
+.chip{padding:7px 13px; border-radius:999px; font-size:13px; font-weight:600; border:1px solid var(--line); background:var(--paper); color:var(--ink-600); cursor:pointer;}
+.chip.active{background:var(--green-700); color:#fff; border-color:var(--green-700);}
+
+.stock-low{color:var(--danger); font-weight:700;}
+.stock-ok{color:var(--ok); font-weight:700;}
+.tab-bar{display:flex; gap:6px; border-bottom:1px solid var(--line); margin:2px 0 18px;}
+.tab-btn{background:none; border:none; padding:10px 4px; margin-right:18px; font-size:14px; font-weight:700; color:var(--ink-400); cursor:pointer; position:relative; top:1px;}
+.tab-btn.active{color:var(--green-800); border-bottom:2.5px solid var(--gold-500);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+.store-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; flex-shrink:0; box-shadow:0 0 0 2px rgba(255,255,255,.6);}
+.store-chip{display:inline-flex; align-items:center; padding:4px 10px 4px 8px; border-radius:999px; font-size:12.8px; font-weight:700; border:1px solid transparent; white-space:nowrap;}
+#saleStore{transition:border-color .15s ease;}
+
+.logout-overlay{
+  position:fixed; inset:0; background:linear-gradient(160deg,var(--green-900),var(--green-800)); z-index:300;
+  display:flex; align-items:center; justify-content:center; flex-direction:column; color:#f4f1e6; text-align:center; padding:20px;
+}
+.logout-overlay .brand-mark{width:92px;height:92px; font-size:22px; margin-bottom:18px;}
+.logout-overlay h2{margin:0 0 6px; font-size:24px;}
+.logout-overlay p{color:#d8d4bd; margin:0 0 22px;}
+
+.empty-state{text-align:center; padding:50px 20px; color:var(--ink-400);}
+.empty-state svg{width:52px;height:52px; color:var(--line); margin-bottom:10px;}
+.empty-state h4{margin:0 0 4px; color:var(--ink-600); font-family:'Fraunces',serif; font-weight:600;}
+
+footer.hint-strip{
+  display:flex; gap:0; flex-wrap:wrap; border-top:1px solid var(--line); margin-top:10px;
+}
+
+/* Settings page */
+.settings-section{margin-bottom:18px;}
+.danger-zone{border:1px solid #f0c9bd; background:var(--danger-bg);}
+
+@media print{
+  .sidebar, .topbar, .no-print, .toast-wrap{display:none !important;}
+  .main{margin-left:0 !important;}
+  body{background:#fff;}
+  .content{padding:0;}
+}
+
+/* ===== Responsive ===== */
+@media (max-width:1080px){
+  .grid-2{grid-template-columns:1fr;}
+  .stat-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media (max-width:900px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0); box-shadow:var(--shadow-2);}
+  .main{margin-left:0;}
+  .hamburger{display:flex;}
+  .sidebar-scrim{
+    display:none; position:fixed; inset:0; background:rgba(18,38,26,.4); z-index:55;
+  }
+  .sidebar-scrim.show{display:block;}
+}
+@media (max-width:640px){
+  .stat-grid{grid-template-columns:1fr 1fr; gap:12px;}
+  .topbar{padding:14px 16px;}
+  .content{padding:16px 16px 50px;}
+  .page-title h1{font-size:20px;}
+  .two-col{grid-template-columns:1fr;}
+  .form-actions{flex-direction:column;}
+  .form-actions .btn{width:100%;}
+}
+@media (max-width:420px){
+  .stat-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="sidebar-scrim" id="scrim"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark"><img id="brandLogo" src="" alt="JLY Rice Choice logo"></div>
+    </div>
+
+    <ul class="nav-group" id="navGroup">
+      <li><button class="nav-link" data-page="dashboard"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Dashboard</button></li>
+      <li><button class="nav-link" data-page="sales"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Daily Sales</button></li>
+      <li><button class="nav-link" data-page="restock"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Add / Restock</button></li>
+      <li><button class="nav-link" data-page="types"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/></svg>Product List</button></li>
+      <li><button class="nav-link" data-page="stores"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l2-6h14l2 6"/><path d="M4 9h16v11H4z"/><path d="M9 20v-6h6v6"/></svg>Buyer/Store</button></li>
+      <li class="nav-divider"></li>
+      <li><button class="nav-link" data-page="summary"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>Summary</button></li>
+      <li><button class="nav-link" data-page="reports"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4"/><path d="M9 12h6M9 16h6"/></svg>Reports</button></li>
+    </ul>
+
+    <div class="sidebar-foot">
+      <ul class="nav-group" style="margin:0;">
+        <li><button class="nav-link" data-page="settings"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1 1.55V21a2 2 0 11-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.55-1H3a2 2 0 110-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-1.55V3a2 2 0 114 0v.09a1.7 1.7 0 001 1.55 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.55 1H21a2 2 0 110 4h-.09a1.7 1.7 0 00-1.51 1z"/></svg>Settings</button></li>
+        <li><button class="nav-link" id="logoutBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>Logout</button></li>
+      </ul>
+      <svg class="sidebar-decor" viewBox="0 0 100 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 140 C48 100 45 60 30 20" stroke="#dab254" stroke-width="2"/>
+        <ellipse cx="30" cy="18" rx="6" ry="10" fill="#dab254" transform="rotate(-20 30 18)"/>
+        <ellipse cx="36" cy="30" rx="6" ry="10" fill="#dab254" transform="rotate(-10 36 30)"/>
+        <ellipse cx="26" cy="40" rx="6" ry="10" fill="#dab254" transform="rotate(-28 26 40)"/>
+        <ellipse cx="38" cy="52" rx="6" ry="10" fill="#dab254" transform="rotate(-6 38 52)"/>
+      </svg>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" id="hamburgerBtn" aria-label="Open menu"><span></span></button>
+        <div class="page-title">
+          <h1 id="pageHeading">Dashboard</h1>
+          <p id="pageSub">Welcome back, Admin!</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="pill">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span id="todayLabel">—</span>
+        </div>
+        <div class="pill admin-pill">
+          <div class="admin-avatar" id="adminAvatar">A</div>
+          <span id="adminNameLabel">Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="stat-grid">
+          <div class="card stat-card">
+            <div class="stat-top">
+              <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c3 3 6 6 6 10a6 6 0 01-12 0c0-4 3-7 6-10z"/></svg></div>
+              <div class="stat-label">Total Sacks Sold</div>
+            </div>
+            <div class="stat-value" id="statSacksSold">0 <span class="unit">sacks</span></div>
+            <div class="stat-trend muted" id="statSacksSoldTrend">Today</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-top">
+              <div class="stat-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/></svg></div>
+              <div class="stat-label">Total Sales</div>
+            </div>
+            <div class="stat-value" id="statSales">₱0.00</div>
+            <div class="stat-trend muted" id="statSalesTrend">Today</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-top">
+              <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3c3 3 6 6 6 10a6 6 0 01-12 0c0-4 3-7 6-10z"/></svg></div>
+              <div class="stat-label">Sacks in Stock</div>
+            </div>
+            <div class="stat-value" id="statStock">0 <span class="unit">sacks</span></div>
+            <div class="stat-trend muted" id="statStockTrend">Updated —</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-top">
+              <div class="stat-icon gold"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l2-6h14l2 6"/><path d="M4 9h16v11H4z"/><path d="M9 20v-6h6v6"/></svg></div>
+              <div class="stat-label">Total Stores</div>
+            </div>
+            <div class="stat-value" id="statStores">0 <span class="unit">stores</span></div>
+            <div class="stat-trend muted">Active</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Sales Overview</h3>
+              <select class="range-select" id="chartRange">
+                <option value="7">Last 7 days</option>
+                <option value="30">Last 30 days</option>
+              </select>
+            </div>
+            <canvas id="salesChart" height="230" aria-label="Sales overview chart" role="img"></canvas>
+          </div>
+          <div class="panel">
+            <div class="panel-head">
+              <h3>Top Sold By (Stores)</h3>
+              <button class="link-btn" data-page="stores">View all</button>
+            </div>
+            <ul class="rank-list" id="topStoresList"></ul>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Recent Transactions</h3>
+            <button class="link-btn" data-page="sales">View All Transactions</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Time</th><th>Type</th><th>Store (Sold By)</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr></thead>
+              <tbody id="recentTxBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <footer class="hint-strip"></footer>
+      </section>
+
+      <!-- DAILY SALES -->
+      <section class="page" id="page-sales">
+        <div class="form-card">
+          <h3>Log a Sale</h3>
+          <p class="sub">Record rice sold to a store or walk-in customer. Stock updates automatically.</p>
+          <form id="saleForm">
+            <div class="form-grid">
+              <div class="field"><label>Date</label><input type="date" id="saleDate" required></div>
+              <div class="field"><label>Buyer</label><select id="saleStore" required></select></div>
+              <div class="field"><label>Rice Type</label><select id="saleType" required></select></div>
+              <div class="field field-highlight"><label>In Stock (Sacks)</label><input type="number" min="1" id="saleQty" required placeholder="e.g. 5"></div>
+              <div class="field"><label>Price / sack (₱)</label><input type="number" min="0" step="0.01" id="salePrice" readonly required></div>
+              <div class="field"><label>Total Amount</label><div class="field-total" id="saleTotalPreview">₱0.00</div></div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add Sale</button>
+              <button type="button" class="btn btn-ghost" id="saleResetBtn">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Sales Records</h3>
+          </div>
+          <div class="tab-bar">
+            <button type="button" class="tab-btn active" data-sales-tab="transactions">Transactions</button>
+            <button type="button" class="tab-btn" data-sales-tab="breakdown">Daily Breakdown</button>
+          </div>
+          <div class="filter-bar">
+            <div class="field" style="max-width:200px;"><label>Store</label><select id="salesFilterStore"><option value="">All stores</option></select></div>
+            <div class="field" style="max-width:200px;"><label>Rice Type</label><select id="salesFilterType"><option value="">All types</option></select></div>
+            <div class="field" style="max-width:170px;"><label>From</label><input type="date" id="salesFilterFrom"></div>
+            <div class="field" style="max-width:170px;"><label>To</label><input type="date" id="salesFilterTo"></div>
+            <button class="btn btn-ghost btn-sm" id="salesFilterClear">Reset filters</button>
+          </div>
+
+          <div class="tab-pane active" id="salesTab-transactions">
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Store</th><th>Rice Type</th><th>Qty</th><th>Price/sack</th><th>Total</th><th>Net Profit</th><th>Tithes (10%)</th><th>Take Home</th><th>Actions</th></tr></thead>
+                <tbody id="salesTableBody"></tbody>
+              </table>
+            </div>
+            <div id="salesEmpty"></div>
+          </div>
+
+          <div class="tab-pane" id="salesTab-breakdown">
+            <div class="small-cards">
+              <div class="mini-stat highlight"><div class="lbl">Total Remitted</div><div class="val" id="bdRemitted">₱0.00</div></div>
+              <div class="mini-stat highlight"><div class="lbl">Total Net Profit</div><div class="val" id="bdProfit">₱0.00</div></div>
+              <div class="mini-stat"><div class="lbl">Total Tithes</div><div class="val" id="bdTithes">₱0.00</div></div>
+              <div class="mini-stat"><div class="lbl">Total Take Home</div><div class="val" id="bdTakeHome">₱0.00</div></div>
+              <div class="mini-stat"><div class="lbl">Sacks Sold</div><div class="val" id="bdQty">0</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADD / RESTOCK -->
+      <section class="page" id="page-restock">
+        <div class="form-card">
+          <h3>Add Stock / Restock</h3>
+          <p class="sub">Log new deliveries or restocked sacks arriving.</p>
+          <form id="restockForm">
+            <div class="form-grid">
+              <div class="field"><label>Date</label><input type="date" id="rsDate" required></div>
+              <div class="field"><label>Rice Type</label><select id="rsType" required></select></div>
+              <div class="field"><label>Bag Size</label>
+                <select id="rsBagSize">
+                  <option value="5kg">5 kg</option>
+                  <option value="10kg">10 kg</option>
+                  <option value="25kg" selected>25 kg</option>
+                  <option value="50kg">50 kg</option>
+                </select>
+              </div>
+              <div class="field field-highlight"><label>Qty Received(Sacks)</label><input type="number" min="1" id="rsQty" required></div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add Stock</button>
+              <button type="button" class="btn btn-ghost" id="rsResetBtn">Clear</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Available Stock</h3></div>
+          <div class="stock-avail-grid" id="stockAvailGrid"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Restock History</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Rice Type</th><th>Bag Size</th><th>Qty</th><th>Actions</th></tr></thead>
+              <tbody id="restockTableBody"></tbody>
+            </table>
+          </div>
+          <div id="restockEmpty"></div>
+        </div>
+      </section>
+
+      <!-- SACKS TYPE -->
+      <section class="page" id="page-types">
+        <div class="form-card">
+          <h3 id="typeFormTitle">Add Product</h3>
+          <p class="sub">Manage the varieties of rice you sell, their bag size, and profit per sack.</p>
+          <form id="typeForm">
+            <div class="form-grid">
+              <div class="field"><label>Rice Type</label><input type="text" id="typeName" required placeholder="e.g. Premium Rice"></div>
+              <div class="field"><label>Bag Size</label>
+                <select id="typeBagSize">
+                  <option value="5kg">5 kg</option>
+                  <option value="10kg">10 kg</option>
+                  <option value="25kg" selected>25 kg</option>
+                  <option value="50kg">50 kg</option>
+                </select>
+              </div>
+              <div class="field"><label>Cost Price (₱)</label><input type="number" min="0" step="0.01" id="typeCostPrice" value="950" required></div>
+              <div class="field"><label>PROFIT/SACK(₱)</label><input type="number" min="0" step="0.01" id="typeProfit" value="100" required></div>
+              <div class="field"><label>Selling Price (₱)</label><input type="number" id="typeSellingPrice" readonly disabled></div>
+            </div>
+            <input type="hidden" id="typeEditId">
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="typeSubmitBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add Product</button>
+              <button type="button" class="btn btn-ghost" id="typeResetBtn">Clear</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Product List</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Rice Type</th><th>Bag Size</th><th>Cost Price</th><th>PROFIT/SACK(₱)</th><th>Selling Price</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="typesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORES -->
+      <section class="page" id="page-stores">
+        <div class="form-card">
+          <h3 id="storeFormTitle">Add Store</h3>
+          <p class="sub">Manage the list of stores or outlets you sell rice to.</p>
+          <form id="storeForm">
+            <div class="form-grid">
+              <div class="field"><label>Customer Name</label><input type="text" id="storeName" required placeholder="e.g. Store - Nagcarlan"></div>
+              <div class="field"><label>Address</label><input type="text" id="storeContact" placeholder="optional"></div>
+              <div class="field"><label>Phone Number</label><input type="text" id="storePhone" placeholder="optional"></div>
+            </div>
+            <input type="hidden" id="storeEditId">
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="storeSubmitBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add Store</button>
+              <button type="button" class="btn btn-ghost" id="storeResetBtn">Clear</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Customer List</h3></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Customer Name</th><th>Address</th><th>Total Sacks Sold</th><th>Total Sales</th><th>Actions</th></tr></thead>
+              <tbody id="storesTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUMMARY -->
+      <section class="page" id="page-summary">
+        <div class="panel">
+          <div class="panel-head"><h3>Summary Range</h3></div>
+          <div class="filter-bar">
+            <div class="field" style="max-width:170px;"><label>From</label><input type="date" id="sumFrom"></div>
+            <div class="field" style="max-width:170px;"><label>To</label><input type="date" id="sumTo"></div>
+            <div class="chip-row" style="margin:0;">
+              <button class="chip" data-range="7">Last 7 days</button>
+              <button class="chip" data-range="30">Last 30 days</button>
+              <button class="chip" data-range="all">All time</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="small-cards">
+          <div class="mini-stat"><div class="lbl">Sacks Sold</div><div class="val" id="sumSacks">0</div></div>
+          <div class="mini-stat"><div class="lbl">Total Revenue</div><div class="val" id="sumRevenue">₱0.00</div></div>
+          <div class="mini-stat"><div class="lbl">Sacks Restocked</div><div class="val" id="sumRestocked">0</div></div>
+          <div class="mini-stat"><div class="lbl">Restock Cost</div><div class="val" id="sumCost">₱0.00</div></div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head"><h3>By Sack Type</h3></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Rice Type</th><th>Sacks Sold</th><th>Revenue</th></tr></thead><tbody id="sumByType"></tbody></table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>By Store</h3></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Store</th><th>Sacks Sold</th><th>Revenue</th></tr></thead><tbody id="sumByStore"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REPORTS -->
+      <section class="page" id="page-reports">
+        <div class="panel">
+          <div class="panel-head"><h3>Generate Report</h3></div>
+          <div class="filter-bar">
+            <div class="field" style="max-width:170px;"><label>From</label><input type="date" id="repFrom"></div>
+            <div class="field" style="max-width:170px;"><label>To</label><input type="date" id="repTo"></div>
+            <div class="field" style="max-width:190px;"><label>Type</label>
+              <select id="repTxType"><option value="all">Sales &amp; Restocks</option><option value="sale">Sales only</option><option value="restock">Restocks only</option></select>
+            </div>
+            <button class="btn btn-primary btn-sm no-print" id="repRunBtn">Run Report</button>
+            <button class="btn btn-ghost btn-sm no-print" id="repPrintBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Print</button>
+            <button class="btn btn-ghost btn-sm no-print" id="repCsvBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>Export CSV</button>
+          </div>
+        </div>
+
+        <div class="panel" id="reportPrintArea">
+          <div class="panel-head">
+            <h3>Report — <span id="repRangeLabel">All time</span></h3>
+          </div>
+          <div class="small-cards">
+            <div class="mini-stat"><div class="lbl">Transactions</div><div class="val" id="repCount">0</div></div>
+            <div class="mini-stat"><div class="lbl">Sacks Sold</div><div class="val" id="repSacksSold">0</div></div>
+            <div class="mini-stat"><div class="lbl">Revenue</div><div class="val" id="repRevenue">₱0.00</div></div>
+            <div class="mini-stat"><div class="lbl">Restock Cost</div><div class="val" id="repCostVal">₱0.00</div></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Type</th><th>Store</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr></thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+          </div>
+          <div id="reportEmpty"></div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="form-card settings-section">
+          <h3>Admin Profile</h3>
+          <p class="sub">This is the name and photo shown in the top bar of the dashboard.</p>
+          <form id="adminProfileForm">
+            <div class="form-grid" style="align-items:end;">
+              <div class="field"><label>Admin Name</label><input type="text" id="setAdminName" placeholder="Jeanette"></div>
+              <div class="field">
+                <label>Profile Photo</label>
+                <div style="display:flex; align-items:center; gap:12px;">
+                  <div id="adminPhotoPreview" style="width:52px;height:52px;border-radius:50%;overflow:hidden;background:var(--green-700);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;"></div>
+                  <input type="file" id="setAdminPhoto" accept="image/*">
+                </div>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Save Profile</button>
+              <button type="button" class="btn btn-ghost" id="removeAdminPhotoBtn">Remove Photo</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="form-card settings-section">
+          <h3>Business Information</h3>
+          <p class="sub">This appears across the dashboard and printed reports.</p>
+          <form id="settingsForm">
+            <div class="form-grid">
+              <div class="field"><label>Business Name</label><input type="text" id="setBizName"></div>
+              <div class="field"><label>Currency Symbol</label><input type="text" id="setCurrency" maxlength="3"></div>
+              <div class="field"><label>Default Cost Price (₱)</label><input type="number" min="0" step="0.01" id="setDefaultCostPrice"></div>
+              <div class="field"><label>Default PROFIT/SACK(₱)</label><input type="number" min="0" step="0.01" id="setDefaultProfit"></div>
+              <div class="field"><label>Low Stock Alert (sacks)</label><input type="number" min="0" id="setLowStock"></div>
+            </div>
+            <p class="sub" style="margin-top:8px;">Default Cost Price and Profit/Sack pre-fill the Add Product form. Low Stock Alert flags any product with stock below this number, here and in Add/Restock &gt; Available Stock.</p>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Save Settings</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="form-card settings-section">
+          <h3>Backup &amp; Restore</h3>
+          <p class="sub">Save a copy of all your data, or restore from a previous backup file.</p>
+          <div class="form-actions">
+            <button class="btn btn-gold" id="backupBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg>Download Backup (.json)</button>
+            <button class="btn btn-ghost" id="restoreBtn">Restore from File</button>
+            <input type="file" id="restoreFile" accept="application/json" hidden>
+          </div>
+        </div>
+
+        <div class="form-card danger-zone">
+          <h3 style="color:var(--danger);">Reset All Data</h3>
+          <p class="sub">This permanently deletes all sales, restocks, stores, and sack types. This cannot be undone.</p>
+          <div class="form-actions">
+            <button class="btn btn-danger" id="resetDataBtn">Reset All Data</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* =========================================================
+   JLY RICE CHOICE — Rice Tracking System
+   Vanilla JS + localStorage persistence
+========================================================= */
+
+const STORAGE_KEY = 'jly_rice_db_v1';
+const LOGO_SRC = 'data:image/jpeg;base64,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';
+const todayISO = () => new Date().toISOString().slice(0,10);
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+
+function fmtMoney(n){
+  const sym = DB.settings.currency || '₱';
+  return sym + (Number(n)||0).toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtDate(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+}
+function fmtDateShort(iso){
+  const d = new Date(iso + 'T00:00:00');
+  return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+}
+function fmtTime(ts){
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+}
+function daysAgoISO(n){
+  const d = new Date(); d.setDate(d.getDate()-n);
+  return d.toISOString().slice(0,10);
+}
+
+/* ---------- Seed data ---------- */
+function buildSeed(){
+  const storeIds = { main: uid(), calamba: uid(), sanpablo: uid(), stacruz: uid(), losbanos: uid() };
+  const typeIds = { regular: uid(), premium: uid(), special: uid() };
+
+  const stores = [
+    {id:storeIds.main, name:'Main Store', contact:'Josie L.', phone:'0917-000-1111'},
+    {id:storeIds.calamba, name:'Store - Calamba', contact:'Nora P.', phone:'0917-000-2222'},
+    {id:storeIds.sanpablo, name:'Store - San Pablo', contact:'Ely R.', phone:'0917-000-3333'},
+    {id:storeIds.stacruz, name:'Store - Sta. Cruz', contact:'Mickey T.', phone:'0917-000-4444'},
+    {id:storeIds.losbanos, name:'Store - Los Baños', contact:'Grace A.', phone:'0917-000-5555'},
+  ];
+  const types = [
+    {id:typeIds.regular, name:'Regular Milled Rice', price:500, costPrice:950, stock:120, bagSize:'25kg', profit:100},
+    {id:typeIds.premium, name:'Premium Rice', price:600, costPrice:950, stock:60, bagSize:'25kg', profit:100},
+    {id:typeIds.special, name:'Special Rice', price:550, costPrice:950, stock:40, bagSize:'25kg', profit:100},
+  ];
+
+  const tx = [];
+  // Distribute ~ demo sacks-sold across the last 7 days to echo reference chart shape
+  const dayPattern = [25,35,20,60,38,50,30]; // oldest -> today
+  const storeOrder = [storeIds.main, storeIds.calamba, storeIds.sanpablo, storeIds.stacruz, storeIds.losbanos];
+  const typeOrder = [typeIds.regular, typeIds.premium, typeIds.special];
+
+  dayPattern.forEach((totalSacks, i) => {
+    const dateISO = daysAgoISO(6 - i);
+    let remaining = totalSacks;
+    let s = 0;
+    while(remaining > 0){
+      const qty = Math.min(remaining, Math.max(2, Math.round(Math.random()*8)+2));
+      const store = storeOrder[s % storeOrder.length];
+      const type = typeOrder[s % typeOrder.length];
+      const priceInfo = types.find(t=>t.id===type);
+      const hour = 6 + (s*2)%12;
+      tx.push({
+        id: uid(), kind:'sale', date: dateISO,
+        ts: new Date(dateISO+'T00:00:00').getTime() + hour*3600000 + s*180000,
+        storeId: store, typeId: type, qty, price: priceInfo.price, amount: qty*priceInfo.price
+      });
+      remaining -= qty; s++;
+    }
+  });
+  // A restock a few days back
+  tx.push({
+    id: uid(), kind:'restock', date: daysAgoISO(1),
+    ts: new Date(daysAgoISO(1)+'T00:00:00').getTime() + 7*3600000 + 15*60000,
+    storeId:null, typeId: typeIds.regular, qty:50, cost:250, amount:50*250, supplier:'Nueva Ecija Mill'
+  });
+
+  return { stores, types, tx, settings:{ bizName:'JLY Rice Choice', currency:'₱', lowStock:10, defaultCostPrice:950, defaultProfit:100, adminName:'Jeanette', adminPhoto:'' } };
+}
+
+let DB = null;
+
+const STORE_COLOR_PALETTE = ['#2f7d5f','#c0562f','#3868b0','#a3418e','#c99a1e','#4a8f3c','#b0473f','#5a5fa8','#1f9e9e','#a86b1f','#7a4fa8','#1f6f8a'];
+function ensureStoreColors(){
+  let changed=false;
+  (DB.stores||[]).forEach((s,i)=>{
+    if(!s.color){ s.color = STORE_COLOR_PALETTE[i % STORE_COLOR_PALETTE.length]; changed=true; }
+  });
+  if(changed) saveDB();
+}
+function storeColorOf(id){
+  const s = DB.stores.find(x=>x.id===id);
+  return (s && s.color) || '#8a8672';
+}
+
+function loadDB(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){
+    try{ DB = JSON.parse(raw); ensureStoreColors(); return; }catch(e){ /* fall through to seed */ }
+  }
+  DB = buildSeed();
+  ensureStoreColors();
+  saveDB();
+}
+function saveDB(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+}
+
+/* ---------- Toasts ---------- */
+function toast(msg, type){
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type==='danger' ? ' danger' : '');
+  el.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg><span></span>';
+  el.querySelector('span').textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateY(6px)'; el.style.transition='all .25s'; setTimeout(()=>el.remove(),250); }, 2600);
+}
+
+/* ---------- Confirm modal ---------- */
+function confirmModal(title, msg, onYes){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-box">
+    <h3>${title}</h3><p>${msg}</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-act="cancel">Cancel</button>
+      <button class="btn btn-danger" data-act="yes">Yes, delete</button>
+    </div></div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e)=>{
+    if(e.target === overlay || e.target.dataset.act === 'cancel'){ overlay.remove(); }
+    if(e.target.dataset.act === 'yes'){ onYes(); overlay.remove(); }
+  });
+}
+
+/* ---------- Navigation ---------- */
+const pages = ['dashboard','sales','restock','types','stores','summary','reports','settings'];
+const pageMeta = {
+  dashboard:{title:'Dashboard', sub:'Welcome back, Admin!'},
+  sales:{title:'Daily Sales', sub:'Log and review every sale, store by store.'},
+  restock:{title:'Add / Restock', sub:'Bring new sacks into your inventory.'},
+  types:{title:'Product List', sub:'Manage rice varieties, bag sizes, and profit per sack.'},
+  stores:{title:'Buyer/Store', sub:'Manage the stores and outlets you supply.'},
+  summary:{title:'Summary', sub:'See totals for any date range.'},
+  reports:{title:'Reports', sub:'Generate, print, or export detailed reports.'},
+  settings:{title:'Settings', sub:'Manage business info and your data.'},
+};
+
+function goToPage(name){
+  pages.forEach(p=>{
+    document.getElementById('page-'+p).classList.toggle('active', p===name);
+  });
+  document.querySelectorAll('.nav-link[data-page]').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.page === name);
+  });
+  document.getElementById('pageHeading').textContent = pageMeta[name].title;
+  document.getElementById('pageSub').textContent = name==='dashboard'
+    ? 'Welcome back, ' + (DB.settings.adminName || 'Jeanette') + '!'
+    : pageMeta[name].sub;
+  closeSidebarMobile();
+  window.scrollTo({top:0, behavior:'smooth'});
+  refreshPage(name);
+}
+
+function refreshPage(name){
+  if(name==='dashboard') renderDashboard();
+  if(name==='sales') renderSalesPage();
+  if(name==='restock') renderRestockPage();
+  if(name==='types') renderTypesPage();
+  if(name==='stores') renderStoresPage();
+  if(name==='summary') renderSummary();
+  if(name==='reports') renderReport();
+}
+
+document.querySelectorAll('[data-page]').forEach(el=>{
+  el.addEventListener('click', ()=> goToPage(el.dataset.page));
+});
+
+/* Mobile sidebar */
+const sidebarEl = document.getElementById('sidebar');
+const scrimEl = document.getElementById('scrim');
+document.getElementById('hamburgerBtn').addEventListener('click', ()=>{
+  sidebarEl.classList.add('open'); scrimEl.classList.add('show');
+});
+scrimEl.addEventListener('click', closeSidebarMobile);
+function closeSidebarMobile(){
+  sidebarEl.classList.remove('open'); scrimEl.classList.remove('show');
+}
+
+/* Logout */
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  confirmModal('Log out?', 'You will need to log back in to continue managing your rice inventory.', ()=>{
+    showLogoutScreen();
+  });
+});
+function showLogoutScreen(){
+  const overlay = document.createElement('div');
+  overlay.className = 'logout-overlay';
+  overlay.innerHTML = `
+    <div class="brand-mark"><img src="${LOGO_SRC}" alt="JLY Rice Choice logo"></div>
+    <h2>You've been logged out</h2>
+    <p>Thanks for using JLY Rice Choice.</p>
+    <button class="btn btn-gold" id="loginAgainBtn">Log Back In</button>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#loginAgainBtn').addEventListener('click', ()=> overlay.remove());
+}
+
+/* =========================================================
+   Helpers to populate selects
+========================================================= */
+function fillStoreSelect(sel, includeAll){
+  sel.innerHTML = (includeAll ? '<option value="">All stores</option>' : '') +
+    DB.stores.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+}
+function fillTypeSelect(sel, includeAll){
+  sel.innerHTML = (includeAll ? '<option value="">All types</option>' : '') +
+    DB.types.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+}
+function storeName(id){ const s = DB.stores.find(x=>x.id===id); return s ? s.name : '—'; }
+function typeInfo(id){ return DB.types.find(x=>x.id===id) || {name:'—', price:0}; }
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+let salesChart = null;
+
+function renderDashboard(){
+  document.getElementById('todayLabel').textContent = fmtDate(todayISO());
+
+  const today = todayISO();
+  const todaysSales = DB.tx.filter(t=>t.kind==='sale' && t.date===today);
+  const sacksToday = todaysSales.reduce((a,t)=>a+t.qty,0);
+  const salesToday = todaysSales.reduce((a,t)=>a+t.amount,0);
+  const stockTotal = DB.types.reduce((a,t)=>a+t.stock,0);
+
+  document.getElementById('statSacksSold').innerHTML = sacksToday + ' <span class="unit">sacks</span>';
+  document.getElementById('statSales').textContent = fmtMoney(salesToday);
+  document.getElementById('statStock').innerHTML = stockTotal + ' <span class="unit">sacks</span>';
+  document.getElementById('statStores').innerHTML = DB.stores.length + ' <span class="unit">stores</span>';
+  document.getElementById('statStockTrend').textContent = 'Updated ' + fmtTime(Date.now());
+
+  renderTopStores();
+  renderRecentTx();
+  drawSalesChart(parseInt(document.getElementById('chartRange').value || '7', 10));
+}
+
+function renderTopStores(){
+  const totals = {};
+  DB.tx.filter(t=>t.kind==='sale').forEach(t=>{
+    totals[t.storeId] = (totals[t.storeId]||0) + t.qty;
+  });
+  const ranked = DB.stores.map(s=>({name:s.name, qty: totals[s.id]||0}))
+    .sort((a,b)=>b.qty-a.qty).slice(0,5);
+  const list = document.getElementById('topStoresList');
+  if(ranked.every(r=>r.qty===0)){
+    list.innerHTML = '<li class="empty-note">No sales recorded yet.</li>';
+    return;
+  }
+  list.innerHTML = ranked.map((r,i)=>`
+    <li class="rank-item">
+      <div class="rank-num">${i+1}</div>
+      <div class="rank-name">${escapeHtml(r.name)}</div>
+      <div class="rank-val">${r.qty} sacks</div>
+    </li>`).join('');
+}
+
+function renderRecentTx(){
+  const rows = [...DB.tx].sort((a,b)=>b.ts-a.ts).slice(0,8);
+  const body = document.getElementById('recentTxBody');
+  if(rows.length===0){ body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-400);padding:24px;">No transactions yet.</td></tr>`; return; }
+  body.innerHTML = rows.map(t=>`
+    <tr>
+      <td>${fmtTime(t.ts)}</td>
+      <td><span class="badge ${t.kind==='sale'?'sale':'restock'}">${t.kind==='sale'?'SALE':'RESTOCK'}</span></td>
+      <td>${t.kind==='sale' ? escapeHtml(storeName(t.storeId)) : (t.supplier?escapeHtml(t.supplier):'—')}</td>
+      <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
+      <td>${t.qty}</td>
+      <td>${fmtMoney(t.amount)}</td>
+    </tr>`).join('');
+}
+
+function drawSalesChart(rangeDays){
+  const labels = [];
+  const sacksData = [];
+  const salesData = [];
+  for(let i=rangeDays-1;i>=0;i--){
+    const d = daysAgoISO(i);
+    labels.push(fmtDateShort(d));
+    const daySales = DB.tx.filter(t=>t.kind==='sale' && t.date===d);
+    sacksData.push(daySales.reduce((a,t)=>a+t.qty,0));
+    salesData.push(daySales.reduce((a,t)=>a+t.amount,0));
+  }
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  if(salesChart) salesChart.destroy();
+  salesChart = new Chart(ctx, {
+    data:{
+      labels,
+      datasets:[
+        {type:'bar', label:'Sacks Sold', data:sacksData, backgroundColor:'#234a2f', borderRadius:6, yAxisID:'y', barPercentage:0.55},
+        {type:'line', label:'Sales (₱)', data:salesData, borderColor:'#c99a2e', backgroundColor:'#c99a2e', tension:.35, yAxisID:'y1', pointRadius:4, pointBackgroundColor:'#c99a2e', borderWidth:2.5}
+      ]
+    },
+    options:{
+      responsive:true,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{position:'top', labels:{boxWidth:12, usePointStyle:true, font:{family:'Inter'}}} },
+      scales:{
+        y:{ position:'left', title:{display:true,text:'Sacks'}, grid:{color:'#efe9d8'} },
+        y1:{ position:'right', title:{display:true,text:'Sales (₱)'}, grid:{display:false} }
+      }
+    }
+  });
+}
+document.getElementById('chartRange').addEventListener('change', (e)=> drawSalesChart(parseInt(e.target.value,10)));
+
+/* =========================================================
+   DAILY SALES PAGE
+========================================================= */
+function renderSalesPage(){
+  fillStoreSelect(document.getElementById('saleStore'));
+  fillSaleTypeSelect(document.getElementById('saleType'));
+  fillStoreSelect(document.getElementById('salesFilterStore'), true);
+  fillTypeSelect(document.getElementById('salesFilterType'), true);
+  document.getElementById('saleDate').value = todayISO();
+  if(!document.getElementById('salesFilterFrom').value) document.getElementById('salesFilterFrom').value = todayISO();
+  if(!document.getElementById('salesFilterTo').value) document.getElementById('salesFilterTo').value = todayISO();
+  syncSalePriceFromType();
+  updateSalePreview();
+  updateBuyerColorIndicator();
+  renderSalesTable();
+  renderDailyBreakdown();
+}
+function updateBuyerColorIndicator(){
+  const sel = document.getElementById('saleStore');
+  if(!sel.value){ sel.style.borderLeft = ''; return; }
+  sel.style.borderLeft = `5px solid ${storeColorOf(sel.value)}`;
+}
+document.getElementById('saleStore').addEventListener('change', updateBuyerColorIndicator);
+function fillSaleTypeSelect(sel){
+  const inStock = DB.types.filter(t=>t.stock > 0);
+  if(inStock.length===0){
+    sel.innerHTML = '<option value="">No stock available</option>';
+    return;
+  }
+  sel.innerHTML = inStock.map(t=>
+    `<option value="${t.id}">${escapeHtml(t.name)} — ${escapeHtml(t.bagSize || '25kg')}</option>`
+  ).join('');
+}
+function sellingPriceOf(t){ return (t.costPrice ?? 950) + (t.profit||0); }
+function syncSalePriceFromType(){
+  const typeId = document.getElementById('saleType').value;
+  const t = typeInfo(typeId);
+  document.getElementById('salePrice').value = t.id ? sellingPriceOf(t).toFixed(2) : '';
+  document.getElementById('saleQty').value = t.id ? (t.stock ?? '') : '';
+  document.getElementById('saleQty').max = t.id ? (t.stock ?? '') : '';
+  updateSalePreview();
+}
+function updateSalePreview(){
+  const qty = parseFloat(document.getElementById('saleQty').value)||0;
+  const price = parseFloat(document.getElementById('salePrice').value)||0;
+  document.getElementById('saleTotalPreview').textContent = fmtMoney(qty*price);
+}
+document.getElementById('saleType').addEventListener('change', syncSalePriceFromType);
+document.getElementById('saleQty').addEventListener('input', updateSalePreview);
+document.getElementById('salePrice').addEventListener('input', updateSalePreview);
+
+document.getElementById('saleForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const date = document.getElementById('saleDate').value || todayISO();
+  const storeId = document.getElementById('saleStore').value;
+  const typeId = document.getElementById('saleType').value;
+  const qty = parseInt(document.getElementById('saleQty').value, 10);
+  const price = parseFloat(document.getElementById('salePrice').value);
+
+  if(!storeId || !typeId){ toast('Please select a buyer and rice type first.', 'danger'); return; }
+  if(!qty || qty<=0){ toast('Enter a valid quantity.', 'danger'); return; }
+
+  const type = DB.types.find(t=>t.id===typeId);
+  if(qty > type.stock){
+    toast(`Only ${type.stock} sacks of ${type.name} in stock.`, 'danger'); return;
+  }
+
+  DB.tx.push({ id:uid(), kind:'sale', date, ts:Date.now(), storeId, typeId, qty, price, costPrice:(type.costPrice ?? 950), amount:qty*price });
+  type.stock -= qty;
+  saveDB();
+  toast('Sale recorded successfully.');
+  document.getElementById('saleForm').reset();
+  document.getElementById('saleDate').value = todayISO();
+  fillSaleTypeSelect(document.getElementById('saleType'));
+  syncSalePriceFromType();
+  updateBuyerColorIndicator();
+  renderSalesTable();
+  renderDailyBreakdown();
+});
+document.getElementById('saleResetBtn').addEventListener('click', ()=>{
+  document.getElementById('saleForm').reset();
+  document.getElementById('saleDate').value = todayISO();
+  syncSalePriceFromType();
+  updateBuyerColorIndicator();
+});
+
+function getFilteredSales(){
+  const store = document.getElementById('salesFilterStore').value;
+  const type = document.getElementById('salesFilterType').value;
+  const from = document.getElementById('salesFilterFrom').value;
+  const to = document.getElementById('salesFilterTo').value;
+  return DB.tx.filter(t=>t.kind==='sale')
+    .filter(t=> !store || t.storeId===store)
+    .filter(t=> !type || t.typeId===type)
+    .filter(t=> !from || t.date>=from)
+    .filter(t=> !to || t.date<=to)
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.ts||0)-(a.ts||0));
+}
+function renderSalesTable(){
+  const rows = getFilteredSales();
+  const body = document.getElementById('salesTableBody');
+  const emptyEl = document.getElementById('salesEmpty');
+  if(rows.length===0){
+    body.innerHTML='';
+    emptyEl.innerHTML = emptyStateHtml('No sales found', 'Try adjusting your filters, or log a new sale above.');
+    return;
+  }
+  emptyEl.innerHTML = '';
+  body.innerHTML = rows.map(t=>{
+    const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
+    const profit = (t.price - costBasis) * t.qty;
+    const tithes = profit * 0.10;
+    const takeHome = profit - tithes;
+    return `
+    <tr>
+      <td>${fmtDate(t.date)}</td>
+      <td><span class="store-chip" style="background:${storeColorOf(t.storeId)}1c;color:${storeColorOf(t.storeId)};border-color:${storeColorOf(t.storeId)}55;"><span class="store-dot" style="background:${storeColorOf(t.storeId)}"></span>${escapeHtml(storeName(t.storeId))}</span></td>
+      <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
+      <td>${t.qty}</td>
+      <td>${fmtMoney(t.price)}</td>
+      <td class="cell-highlight">${fmtMoney(t.amount)}</td>
+      <td class="cell-highlight">${fmtMoney(profit)}</td>
+      <td>${fmtMoney(tithes)}</td>
+      <td>${fmtMoney(takeHome)}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      confirmModal('Delete sale?', 'This will remove the transaction and return the sacks to stock.', ()=>{
+        const tx = DB.tx.find(x=>x.id===btn.dataset.del);
+        if(tx){
+          const type = DB.types.find(t=>t.id===tx.typeId);
+          if(type) type.stock += tx.qty;
+          DB.tx = DB.tx.filter(x=>x.id!==tx.id);
+          saveDB(); toast('Sale deleted.');
+          fillSaleTypeSelect(document.getElementById('saleType'));
+          renderSalesTable();
+          renderDailyBreakdown();
+        }
+      });
+    });
+  });
+}
+['salesFilterStore','salesFilterType','salesFilterFrom','salesFilterTo'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', ()=>{ renderSalesTable(); renderDailyBreakdown(); });
+});
+document.getElementById('salesFilterClear').addEventListener('click', ()=>{
+  document.getElementById('salesFilterStore').value='';
+  document.getElementById('salesFilterType').value='';
+  document.getElementById('salesFilterFrom').value='';
+  document.getElementById('salesFilterTo').value='';
+  renderSalesTable();
+  renderDailyBreakdown();
+});
+
+document.querySelectorAll('[data-sales-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-sales-tab]').forEach(b=>b.classList.toggle('active', b===btn));
+    const target = btn.dataset.salesTab;
+    document.getElementById('salesTab-transactions').classList.toggle('active', target==='transactions');
+    document.getElementById('salesTab-breakdown').classList.toggle('active', target==='breakdown');
+    if(target==='breakdown') renderDailyBreakdown();
+  });
+});
+
+function getDailyBreakdown(){
+  const rows = getFilteredSales();
+  const byDate = {};
+  rows.forEach(t=>{
+    const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
+    const profit = (t.price - costBasis) * t.qty;
+    const tithes = profit * 0.10;
+    const takeHome = profit - tithes;
+    if(!byDate[t.date]) byDate[t.date] = {date:t.date, qty:0, remitted:0, profit:0, tithes:0, takeHome:0};
+    const d = byDate[t.date];
+    d.qty += t.qty;
+    d.remitted += t.amount;
+    d.profit += profit;
+    d.tithes += tithes;
+    d.takeHome += takeHome;
+  });
+  return Object.values(byDate).sort((a,b)=> b.date.localeCompare(a.date));
+}
+function renderDailyBreakdown(){
+  const days = getDailyBreakdown();
+  const totals = days.reduce((a,d)=>({
+    qty:a.qty+d.qty, remitted:a.remitted+d.remitted, profit:a.profit+d.profit, tithes:a.tithes+d.tithes, takeHome:a.takeHome+d.takeHome
+  }), {qty:0, remitted:0, profit:0, tithes:0, takeHome:0});
+  document.getElementById('bdRemitted').textContent = fmtMoney(totals.remitted);
+  document.getElementById('bdProfit').textContent = fmtMoney(totals.profit);
+  document.getElementById('bdTithes').textContent = fmtMoney(totals.tithes);
+  document.getElementById('bdTakeHome').textContent = fmtMoney(totals.takeHome);
+  document.getElementById('bdQty').textContent = totals.qty + ' sacks';
+}
+
+/* =========================================================
+   RESTOCK PAGE
+========================================================= */
+function renderRestockPage(){
+  fillTypeSelect(document.getElementById('rsType'));
+  styleRsTypeOptions();
+  document.getElementById('rsDate').value = todayISO();
+  updateRestockBagSize();
+  renderAvailableStock();
+  renderRestockTable();
+}
+function styleRsTypeOptions(){
+  const sel = document.getElementById('rsType');
+  Array.from(sel.options).forEach(opt=>{
+    const type = DB.types.find(t=>t.id===opt.value);
+    if(type && type.stock > 0){
+      opt.style.color = 'var(--ok)';
+      opt.style.fontWeight = '700';
+    } else {
+      opt.style.color = '';
+      opt.style.fontWeight = '';
+    }
+  });
+}
+const RS_BAG_SIZE_OPTIONS = ['5kg','10kg','25kg','50kg'];
+function updateRestockBagSize(){
+  const typeId = document.getElementById('rsType').value;
+  const type = DB.types.find(t=>t.id===typeId);
+  const bagInput = document.getElementById('rsBagSize');
+  const registeredSize = type ? (type.bagSize || '25kg') : '25kg';
+
+  // Remove any previously-injected custom option before rebuilding
+  const oldCustom = bagInput.querySelector('option[data-custom="1"]');
+  if(oldCustom) oldCustom.remove();
+
+  // If the registered size isn't one of the standard options (e.g. an older/custom
+  // value), inject it so the field always shows the true registered bag size.
+  if(!RS_BAG_SIZE_OPTIONS.includes(registeredSize)){
+    const opt = document.createElement('option');
+    opt.value = registeredSize;
+    opt.textContent = registeredSize;
+    opt.dataset.custom = '1';
+    bagInput.appendChild(opt);
+  }
+
+  bagInput.value = registeredSize;
+  const locked = !type || type.stock > 0;
+  bagInput.disabled = locked;
+  bagInput.title = !type ? '' : (type.stock > 0
+    ? 'Cannot edit bag size while stock is available. Set stock to 0 first to make changes.'
+    : 'This type has no stock yet — you can change the bag size. It saves when you click Add Stock.');
+}
+document.getElementById('rsType').addEventListener('change', updateRestockBagSize);
+function renderAvailableStock(){
+  const grid = document.getElementById('stockAvailGrid');
+  const inStock = DB.types.filter(t=>t.stock > 0);
+  if(inStock.length===0){
+    grid.innerHTML = `<div class="stock-avail-empty">No sacks in stock right now. Add stock using the form above.</div>`;
+    return;
+  }
+  grid.innerHTML = inStock.map(t=>{
+    const low = t.stock <= (DB.settings.lowStock ?? 10);
+    const costPrice = t.costPrice ?? 950;
+    const sellingPrice = costPrice + (t.profit||0);
+    return `<div class="stock-avail-card ${low?'sa-low':'sa-ok'}" data-id="${t.id}">
+      <button type="button" class="sa-edit-btn" data-edit-stock="${t.id}" title="Edit stock &amp; selling price"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+      <div class="sa-name">${escapeHtml(t.name)}</div>
+      <div class="sa-size">${escapeHtml(t.bagSize || '25kg')}</div>
+      <div class="sa-qty-view">
+        <span class="sa-qty">${t.stock}<span class="unit">sacks</span></span>
+        <div class="sa-price-view">Selling: ${fmtMoney(sellingPrice)}</div>
+      </div>
+      <div class="sa-qty-edit" hidden>
+        <label class="sa-edit-label">Stock (sacks)</label>
+        <input type="number" min="0" class="sa-qty-input" value="${t.stock}">
+        <label class="sa-edit-label">Selling Price (₱)</label>
+        <input type="number" min="0" step="0.01" class="sa-price-input" value="${sellingPrice}">
+        <div class="sa-edit-actions">
+          <button type="button" class="sa-save-btn" data-save-stock="${t.id}" title="Save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></button>
+          <button type="button" class="sa-cancel-btn" data-cancel-stock="${t.id}" title="Cancel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('[data-edit-stock]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const card = grid.querySelector(`.stock-avail-card[data-id="${btn.dataset.editStock}"]`);
+      card.querySelector('.sa-qty-view').hidden = true;
+      card.querySelector('.sa-edit-btn').hidden = true;
+      const editRow = card.querySelector('.sa-qty-edit');
+      editRow.hidden = false;
+      const input = editRow.querySelector('.sa-qty-input');
+      input.focus(); input.select();
+    });
+  });
+  grid.querySelectorAll('[data-cancel-stock]').forEach(btn=>{
+    btn.addEventListener('click', ()=> renderAvailableStock());
+  });
+  grid.querySelectorAll('[data-save-stock]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.saveStock;
+      const card = grid.querySelector(`.stock-avail-card[data-id="${id}"]`);
+      const qtyInput = card.querySelector('.sa-qty-input');
+      const priceInput = card.querySelector('.sa-price-input');
+      const val = parseInt(qtyInput.value, 10);
+      const newSellingPrice = parseFloat(priceInput.value);
+      if(isNaN(val) || val < 0){ toast('Enter a valid stock quantity.', 'danger'); return; }
+      if(isNaN(newSellingPrice) || newSellingPrice < 0){ toast('Enter a valid selling price.', 'danger'); return; }
+      const type = DB.types.find(x=>x.id===id);
+      if(type){
+        type.stock = val;
+        const costPrice = type.costPrice ?? 950;
+        // Selling price changes only affect profit/sack; cost price stays fixed.
+        type.profit = Math.max(0, +(newSellingPrice - costPrice).toFixed(2));
+        saveDB();
+        toast('Stock & selling price updated.');
+        if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+      }
+      styleRsTypeOptions();
+      updateRestockBagSize();
+      renderAvailableStock();
+    });
+  });
+  grid.querySelectorAll('.sa-qty-input, .sa-price-input').forEach(input=>{
+    input.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ e.preventDefault(); input.closest('.stock-avail-card').querySelector('[data-save-stock]').click(); }
+      if(e.key==='Escape'){ e.preventDefault(); renderAvailableStock(); }
+    });
+  });
+}
+
+document.getElementById('restockForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const date = document.getElementById('rsDate').value || todayISO();
+  const typeId = document.getElementById('rsType').value;
+  const qty = parseInt(document.getElementById('rsQty').value,10);
+
+  if(!typeId){ toast('Please add a rice type first.', 'danger'); return; }
+  if(!qty || qty<=0){ toast('Enter a valid quantity.', 'danger'); return; }
+
+  const type = DB.types.find(t=>t.id===typeId);
+  const chosenBagSize = document.getElementById('rsBagSize').value;
+  let bagSizeChanged = false;
+  if(type.stock === 0 && chosenBagSize && chosenBagSize !== (type.bagSize || '25kg')){
+    type.bagSize = chosenBagSize;
+    const { costPrice, profit, sellingPrice } = scaledPricesForBagSize(chosenBagSize);
+    type.costPrice = costPrice;
+    type.profit = profit;
+    type.sellingPrice = sellingPrice;
+    bagSizeChanged = true;
+  }
+
+  DB.tx.push({ id:uid(), kind:'restock', date, ts:Date.now(), storeId:null, typeId, qty });
+  type.stock += qty;
+  saveDB();
+  toast(bagSizeChanged ? 'Stock added, bag size and pricing updated.' : 'Stock added successfully.');
+  document.getElementById('restockForm').reset();
+  document.getElementById('rsDate').value = todayISO();
+  updateRestockBagSize();
+  styleRsTypeOptions();
+  renderAvailableStock();
+  renderRestockTable();
+  fillSaleTypeSelect(document.getElementById('saleType'));
+  if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+});
+document.getElementById('rsResetBtn').addEventListener('click', ()=>{
+  document.getElementById('restockForm').reset();
+  document.getElementById('rsDate').value = todayISO();
+  updateRestockBagSize();
+});
+
+function renderRestockTable(){
+  const rows = DB.tx.filter(t=>t.kind==='restock').sort((a,b)=>b.ts-a.ts);
+  const body = document.getElementById('restockTableBody');
+  const emptyEl = document.getElementById('restockEmpty');
+  if(rows.length===0){
+    body.innerHTML=''; emptyEl.innerHTML = emptyStateHtml('No restocks yet', 'Add your first delivery using the form above.'); return;
+  }
+  emptyEl.innerHTML='';
+  body.innerHTML = rows.map(t=>`
+    <tr>
+      <td>${fmtDate(t.date)}</td>
+      <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
+      <td>${escapeHtml(typeInfo(t.typeId).bagSize || '25kg')}</td>
+      <td>${t.qty}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+      </div></td>
+    </tr>`).join('');
+  body.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      confirmModal('Delete restock?', 'This will remove this delivery and subtract the sacks from stock.', ()=>{
+        const tx = DB.tx.find(x=>x.id===btn.dataset.del);
+        if(tx){
+          const type = DB.types.find(t=>t.id===tx.typeId);
+          if(type) type.stock = Math.max(0, type.stock - tx.qty);
+          DB.tx = DB.tx.filter(x=>x.id!==tx.id);
+          saveDB(); toast('Restock deleted.'); styleRsTypeOptions(); renderAvailableStock(); renderRestockTable();
+        }
+      });
+    });
+  });
+}
+
+/* =========================================================
+   SACKS TYPE PAGE
+========================================================= */
+function renderTypesPage(){
+  const body = document.getElementById('typesTableBody');
+  if(DB.types.length===0){
+    body.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-400);padding:24px;">No rice types added yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML = DB.types.map(t=>{
+    const noStock = t.stock === 0;
+    const low = !noStock && t.stock <= (DB.settings.lowStock||0);
+    const costPrice = t.costPrice ?? 950;
+    const sellingPrice = costPrice + (t.profit||0);
+    let statusBadge;
+    if(noStock) statusBadge = '<span class="badge danger">NO STOCK</span>';
+    else if(low) statusBadge = '<span class="badge danger">LOW STOCK</span>';
+    else statusBadge = '<span class="badge sale">IN STOCK</span>';
+    return `<tr>
+      <td>${escapeHtml(t.name)}</td>
+      <td>${escapeHtml(t.bagSize || '25kg')}</td>
+      <td>${fmtMoney(costPrice)}</td>
+      <td>${fmtMoney(t.profit)}</td>
+      <td>${fmtMoney(sellingPrice)}</td>
+      <td>${statusBadge}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-edit="${t.id}" ${t.stock>0?'disabled':''} title="${t.stock>0?'Cannot edit while stock is available. Set stock to 0 in Add/Restock first.':'Edit'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+        <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const t = DB.types.find(x=>x.id===btn.dataset.edit);
+      if(t.stock > 0){ toast('Cannot edit this product while it still has stock. Set stock to 0 in Add/Restock first.', 'danger'); return; }
+      document.getElementById('typeName').value = t.name;
+      document.getElementById('typeBagSize').value = t.bagSize || '25kg';
+      document.getElementById('typeCostPrice').value = t.costPrice ?? 950;
+      document.getElementById('typeProfit').value = t.profit ?? 100;
+      updateSellingPricePreview();
+      document.getElementById('typeEditId').value = t.id;
+      document.getElementById('typeFormTitle').textContent = 'Edit Product';
+      document.getElementById('typeSubmitBtn').textContent = 'Save Changes';
+      document.querySelector('#page-types').scrollIntoView({behavior:'smooth'});
+    });
+  });
+  body.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const inUse = DB.tx.some(t=>t.typeId===btn.dataset.del);
+      confirmModal('Delete sack type?', inUse ? 'This type has transaction history. Existing records will keep showing its name, but it will no longer be selectable.' : 'This will remove the sack type permanently.', ()=>{
+        DB.types = DB.types.filter(x=>x.id!==btn.dataset.del);
+        saveDB(); toast('Sack type deleted.'); renderTypesPage();
+      });
+    });
+  });
+}
+document.getElementById('typeForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('typeName').value.trim();
+  const bagSize = document.getElementById('typeBagSize').value;
+  const costPrice = parseFloat(document.getElementById('typeCostPrice').value) || 0;
+  const profit = parseFloat(document.getElementById('typeProfit').value) || 0;
+  const sellingPrice = costPrice + profit;
+  const editId = document.getElementById('typeEditId').value;
+  if(!name){ toast('Enter a rice name.', 'danger'); return; }
+
+  if(editId){
+    const t = DB.types.find(x=>x.id===editId);
+    t.name=name; t.bagSize=bagSize; t.costPrice=costPrice; t.profit=profit; t.sellingPrice=sellingPrice;
+    toast('Sack type updated.');
+  }else{
+    DB.types.push({id:uid(), name, bagSize, costPrice, profit, sellingPrice, price:0, stock:0});
+    toast('Sack type added.');
+  }
+  saveDB();
+  resetTypeForm();
+  renderTypesPage();
+});
+function resetTypeForm(){
+  document.getElementById('typeForm').reset();
+  document.getElementById('typeEditId').value='';
+  document.getElementById('typeCostPrice').value = DB?.settings?.defaultCostPrice ?? 950;
+  document.getElementById('typeProfit').value = DB?.settings?.defaultProfit ?? 100;
+  document.getElementById('typeFormTitle').textContent='Add Product';
+  document.getElementById('typeSubmitBtn').textContent='Add Product';
+  updateSellingPricePreview();
+}
+document.getElementById('typeResetBtn').addEventListener('click', resetTypeForm);
+function updateSellingPricePreview(){
+  const cost = parseFloat(document.getElementById('typeCostPrice').value) || 0;
+  const profit = parseFloat(document.getElementById('typeProfit').value) || 0;
+  document.getElementById('typeSellingPrice').value = (cost + profit).toFixed(2);
+}
+const BAG_SIZE_KG = {'5kg':5, '10kg':10, '25kg':25, '50kg':50};
+function scaledPricesForBagSize(bagSize){
+  const kg = BAG_SIZE_KG[bagSize] || 25;
+  const baseCost = DB?.settings?.defaultCostPrice ?? 950;   // base rate at 25kg
+  const baseProfit = DB?.settings?.defaultProfit ?? 100;    // base rate at 25kg
+  const ratio = kg / 25;
+  const costPrice = +(baseCost * ratio).toFixed(2);
+  const profit = +(baseProfit * ratio).toFixed(2);
+  return { costPrice, profit, sellingPrice: +(costPrice + profit).toFixed(2) };
+}
+function applyBagSizeScaling(){
+  const bagSize = document.getElementById('typeBagSize').value;
+  const { costPrice, profit } = scaledPricesForBagSize(bagSize);
+  document.getElementById('typeCostPrice').value = costPrice.toFixed(2);
+  document.getElementById('typeProfit').value = profit.toFixed(2);
+  updateSellingPricePreview();
+}
+document.getElementById('typeBagSize').addEventListener('change', applyBagSizeScaling);
+document.getElementById('typeCostPrice').addEventListener('input', updateSellingPricePreview);
+document.getElementById('typeProfit').addEventListener('input', updateSellingPricePreview);
+updateSellingPricePreview();
+
+/* =========================================================
+   STORES PAGE
+========================================================= */
+function renderStoresPage(){
+  const body = document.getElementById('storesTableBody');
+  if(DB.stores.length===0){
+    body.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--ink-400);padding:24px;">No stores added yet.</td></tr>`;
+    return;
+  }
+  body.innerHTML = DB.stores.map(s=>{
+    const sSales = DB.tx.filter(t=>t.kind==='sale' && t.storeId===s.id);
+    const sacks = sSales.reduce((a,t)=>a+t.qty,0);
+    const revenue = sSales.reduce((a,t)=>a+t.amount,0);
+    return `<tr>
+      <td><span class="store-dot" style="background:${s.color||'#8a8672'}"></span>${escapeHtml(s.name)}</td>
+      <td>${escapeHtml(s.contact||'—')}${s.phone ? ' · '+escapeHtml(s.phone) : ''}</td>
+      <td>${sacks} sacks</td>
+      <td>${fmtMoney(revenue)}</td>
+      <td><div class="row-actions">
+        <button class="icon-btn" data-edit="${s.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+        <button class="icon-btn danger" data-del="${s.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
+      </div></td>
+    </tr>`;
+  }).join('');
+  body.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const s = DB.stores.find(x=>x.id===btn.dataset.edit);
+      document.getElementById('storeName').value = s.name;
+      document.getElementById('storeContact').value = s.contact||'';
+      document.getElementById('storePhone').value = s.phone||'';
+      document.getElementById('storeEditId').value = s.id;
+      document.getElementById('storeFormTitle').textContent = 'Edit Store';
+      document.getElementById('storeSubmitBtn').textContent = 'Save Changes';
+      document.querySelector('#page-stores').scrollIntoView({behavior:'smooth'});
+    });
+  });
+  body.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      confirmModal('Delete store?', 'Existing sales records for this store will keep its name but it will no longer be selectable for new sales.', ()=>{
+        DB.stores = DB.stores.filter(x=>x.id!==btn.dataset.del);
+        saveDB(); toast('Store deleted.'); renderStoresPage();
+      });
+    });
+  });
+}
+document.getElementById('storeForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const name = document.getElementById('storeName').value.trim();
+  const contact = document.getElementById('storeContact').value.trim();
+  const phone = document.getElementById('storePhone').value.trim();
+  const editId = document.getElementById('storeEditId').value;
+  if(!name){ toast('Enter a store name.', 'danger'); return; }
+
+  if(editId){
+    const s = DB.stores.find(x=>x.id===editId);
+    s.name=name; s.contact=contact; s.phone=phone;
+    toast('Store updated.');
+  }else{
+    DB.stores.push({id:uid(), name, contact, phone, color: STORE_COLOR_PALETTE[DB.stores.length % STORE_COLOR_PALETTE.length]});
+    toast('Store added.');
+  }
+  saveDB();
+  resetStoreForm();
+  renderStoresPage();
+});
+function resetStoreForm(){
+  document.getElementById('storeForm').reset();
+  document.getElementById('storeEditId').value='';
+  document.getElementById('storeFormTitle').textContent='Add Store';
+  document.getElementById('storeSubmitBtn').textContent='Add Store';
+}
+document.getElementById('storeResetBtn').addEventListener('click', resetStoreForm);
+
+/* =========================================================
+   SUMMARY PAGE
+========================================================= */
+function renderSummary(range){
+  const fromEl = document.getElementById('sumFrom');
+  const toEl = document.getElementById('sumTo');
+  if(!fromEl.value && !toEl.value){
+    fromEl.value = daysAgoISO(6); toEl.value = todayISO();
+  }
+  computeSummary(fromEl.value, toEl.value);
+}
+document.querySelectorAll('.chip[data-range]').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('.chip[data-range]').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    const r = chip.dataset.range;
+    if(r==='all'){
+      document.getElementById('sumFrom').value='';
+      document.getElementById('sumTo').value='';
+    }else{
+      document.getElementById('sumFrom').value = daysAgoISO(parseInt(r,10)-1);
+      document.getElementById('sumTo').value = todayISO();
+    }
+    computeSummary(document.getElementById('sumFrom').value, document.getElementById('sumTo').value);
+  });
+});
+['sumFrom','sumTo'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', ()=>{
+    document.querySelectorAll('.chip[data-range]').forEach(c=>c.classList.remove('active'));
+    computeSummary(document.getElementById('sumFrom').value, document.getElementById('sumTo').value);
+  });
+});
+
+function computeSummary(from, to){
+  const inRange = (t)=> (!from || t.date>=from) && (!to || t.date<=to);
+  const sales = DB.tx.filter(t=>t.kind==='sale' && inRange(t));
+  const restocks = DB.tx.filter(t=>t.kind==='restock' && inRange(t));
+
+  document.getElementById('sumSacks').textContent = sales.reduce((a,t)=>a+t.qty,0);
+  document.getElementById('sumRevenue').textContent = fmtMoney(sales.reduce((a,t)=>a+t.amount,0));
+  document.getElementById('sumRestocked').textContent = restocks.reduce((a,t)=>a+t.qty,0);
+  document.getElementById('sumCost').textContent = fmtMoney(restocks.reduce((a,t)=>a+(t.amount||0),0));
+
+  const byType = {};
+  sales.forEach(t=>{ const k=t.typeId; byType[k]=byType[k]||{qty:0,rev:0}; byType[k].qty+=t.qty; byType[k].rev+=t.amount; });
+  const typeBody = document.getElementById('sumByType');
+  const typeRows = Object.entries(byType).sort((a,b)=>b[1].qty-a[1].qty);
+  typeBody.innerHTML = typeRows.length ? typeRows.map(([id,v])=>`<tr><td>${escapeHtml(typeInfo(id).name)}</td><td>${v.qty}</td><td>${fmtMoney(v.rev)}</td></tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center;color:var(--ink-400);padding:18px;">No sales in range.</td></tr>`;
+
+  const byStore = {};
+  sales.forEach(t=>{ const k=t.storeId; byStore[k]=byStore[k]||{qty:0,rev:0}; byStore[k].qty+=t.qty; byStore[k].rev+=t.amount; });
+  const storeBody = document.getElementById('sumByStore');
+  const storeRows = Object.entries(byStore).sort((a,b)=>b[1].qty-a[1].qty);
+  storeBody.innerHTML = storeRows.length ? storeRows.map(([id,v])=>`<tr><td>${escapeHtml(storeName(id))}</td><td>${v.qty}</td><td>${fmtMoney(v.rev)}</td></tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center;color:var(--ink-400);padding:18px;">No sales in range.</td></tr>`;
+}
+
+/* =========================================================
+   REPORTS PAGE
+========================================================= */
+function renderReport(){
+  if(!document.getElementById('repFrom').value && !document.getElementById('repTo').value){
+    document.getElementById('repFrom').value = daysAgoISO(6);
+    document.getElementById('repTo').value = todayISO();
+  }
+  runReport();
+}
+document.getElementById('repRunBtn').addEventListener('click', runReport);
+document.getElementById('repPrintBtn').addEventListener('click', ()=> window.print());
+document.getElementById('repCsvBtn').addEventListener('click', exportCsv);
+
+function getReportRows(){
+  const from = document.getElementById('repFrom').value;
+  const to = document.getElementById('repTo').value;
+  const kindFilter = document.getElementById('repTxType').value;
+  return DB.tx
+    .filter(t=> !from || t.date>=from)
+    .filter(t=> !to || t.date<=to)
+    .filter(t=> kindFilter==='all' || t.kind===kindFilter)
+    .sort((a,b)=>b.ts-a.ts);
+}
+function runReport(){
+  const rows = getReportRows();
+  const from = document.getElementById('repFrom').value;
+  const to = document.getElementById('repTo').value;
+  document.getElementById('repRangeLabel').textContent = (from||to) ? `${from?fmtDate(from):'…'} – ${to?fmtDate(to):'…'}` : 'All time';
+
+  const sales = rows.filter(t=>t.kind==='sale');
+  const restocks = rows.filter(t=>t.kind==='restock');
+  document.getElementById('repCount').textContent = rows.length;
+  document.getElementById('repSacksSold').textContent = sales.reduce((a,t)=>a+t.qty,0);
+  document.getElementById('repRevenue').textContent = fmtMoney(sales.reduce((a,t)=>a+t.amount,0));
+  document.getElementById('repCostVal').textContent = fmtMoney(restocks.reduce((a,t)=>a+(t.amount||0),0));
+
+  const body = document.getElementById('reportTableBody');
+  const emptyEl = document.getElementById('reportEmpty');
+  if(rows.length===0){
+    body.innerHTML=''; emptyEl.innerHTML = emptyStateHtml('No records in this range', 'Try a wider date range.'); return;
+  }
+  emptyEl.innerHTML='';
+  body.innerHTML = rows.map(t=>`
+    <tr>
+      <td>${fmtDate(t.date)}</td>
+      <td><span class="badge ${t.kind==='sale'?'sale':'restock'}">${t.kind==='sale'?'SALE':'RESTOCK'}</span></td>
+      <td>${t.kind==='sale' ? escapeHtml(storeName(t.storeId)) : escapeHtml(t.supplier||'—')}</td>
+      <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
+      <td>${t.qty}</td>
+      <td>${fmtMoney(t.amount)}</td>
+    </tr>`).join('');
+}
+function exportCsv(){
+  const rows = getReportRows();
+  if(rows.length===0){ toast('Nothing to export in this range.', 'danger'); return; }
+  const header = ['Date','Type','Store/Supplier','Sack Type','Sacks','Amount'];
+  const lines = [header.join(',')];
+  rows.forEach(t=>{
+    const line = [
+      t.date,
+      t.kind==='sale'?'SALE':'RESTOCK',
+      `"${(t.kind==='sale'?storeName(t.storeId):(t.supplier||'')).replace(/"/g,'""')}"`,
+      `"${typeInfo(t.typeId).name.replace(/"/g,'""')}"`,
+      t.qty,
+      t.amount.toFixed(2)
+    ];
+    lines.push(line.join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'jly-rice-choice-report.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV downloaded.');
+}
+
+/* =========================================================
+   SETTINGS PAGE
+========================================================= */
+function loadSettingsForm(){
+  document.getElementById('setBizName').value = DB.settings.bizName || 'JLY Rice Choice';
+  document.getElementById('setCurrency').value = DB.settings.currency || '₱';
+  document.getElementById('setLowStock').value = DB.settings.lowStock ?? 10;
+  document.getElementById('setDefaultCostPrice').value = DB.settings.defaultCostPrice ?? 950;
+  document.getElementById('setDefaultProfit').value = DB.settings.defaultProfit ?? 100;
+  document.getElementById('setAdminName').value = DB.settings.adminName || 'Jeanette';
+  renderAdminPhotoPreview(DB.settings.adminPhoto, DB.settings.adminName);
+  renderAdminProfile();
+}
+function renderAdminPhotoPreview(photo, name){
+  const box = document.getElementById('adminPhotoPreview');
+  const initial = (name||'A').trim().charAt(0).toUpperCase() || 'A';
+  box.innerHTML = photo ? `<img src="${photo}" alt="Admin photo">` : initial;
+}
+function renderAdminProfile(){
+  const name = DB.settings.adminName || 'Jeanette';
+  const photo = DB.settings.adminPhoto || '';
+  const initial = name.trim().charAt(0).toUpperCase() || 'A';
+  document.getElementById('adminNameLabel').textContent = name;
+  document.getElementById('adminAvatar').innerHTML = photo ? `<img src="${photo}" alt="${escapeHtml(name)}">` : initial;
+  const sub = document.getElementById('pageSub');
+  if(sub && document.getElementById('page-dashboard').classList.contains('active')){
+    sub.textContent = 'Welcome back, ' + name + '!';
+  }
+}
+let pendingAdminPhoto = undefined; // undefined = no change, '' = removed, dataURL = new photo
+document.getElementById('setAdminPhoto').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!file.type.startsWith('image/')){ toast('Please choose an image file.', 'danger'); e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    pendingAdminPhoto = evt.target.result;
+    renderAdminPhotoPreview(pendingAdminPhoto, document.getElementById('setAdminName').value);
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById('removeAdminPhotoBtn').addEventListener('click', ()=>{
+  pendingAdminPhoto = '';
+  document.getElementById('setAdminPhoto').value = '';
+  renderAdminPhotoPreview('', document.getElementById('setAdminName').value);
+});
+document.getElementById('adminProfileForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  DB.settings.adminName = document.getElementById('setAdminName').value.trim() || 'Jeanette';
+  if(pendingAdminPhoto !== undefined){ DB.settings.adminPhoto = pendingAdminPhoto; }
+  pendingAdminPhoto = undefined;
+  saveDB();
+  renderAdminProfile();
+  renderAdminPhotoPreview(DB.settings.adminPhoto, DB.settings.adminName);
+  toast('Admin profile saved.');
+});
+document.getElementById('settingsForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  DB.settings.bizName = document.getElementById('setBizName').value.trim() || 'JLY Rice Choice';
+  DB.settings.currency = document.getElementById('setCurrency').value.trim() || '₱';
+  DB.settings.lowStock = parseInt(document.getElementById('setLowStock').value,10) || 0;
+  DB.settings.defaultCostPrice = parseFloat(document.getElementById('setDefaultCostPrice').value) || 0;
+  DB.settings.defaultProfit = parseFloat(document.getElementById('setDefaultProfit').value) || 0;
+  saveDB();
+  toast('Settings saved.');
+  renderDashboard();
+  if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+  if(document.getElementById('page-restock').classList.contains('active')) renderAvailableStock();
+});
+document.getElementById('backupBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'jly-rice-choice-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded.');
+});
+document.getElementById('restoreBtn').addEventListener('click', ()=> document.getElementById('restoreFile').click());
+document.getElementById('restoreFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const parsed = JSON.parse(evt.target.result);
+      if(!parsed.stores || !parsed.types || !parsed.tx){ throw new Error('bad file'); }
+      confirmModal('Restore backup?', 'This will replace all current data with the contents of this file.', ()=>{
+        DB = parsed;
+        if(!DB.settings) DB.settings = {bizName:'JLY Rice Choice', currency:'₱', lowStock:10, defaultCostPrice:950, defaultProfit:100, adminName:'Jeanette', adminPhoto:''};
+        saveDB();
+        toast('Backup restored.');
+        loadSettingsForm();
+        goToPage('dashboard');
+      });
+    }catch(err){
+      toast('That file could not be read. Please choose a valid backup.', 'danger');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+document.getElementById('resetDataBtn').addEventListener('click', ()=>{
+  confirmModal('Reset all data?', 'All sales, restocks, stores, and sack types will be permanently deleted.', ()=>{
+    localStorage.removeItem(STORAGE_KEY);
+    DB = buildSeed();
+    saveDB();
+    toast('All data has been reset.');
+    loadSettingsForm();
+    goToPage('dashboard');
+  });
+});
+
+/* ---------- Utility ---------- */
+function emptyStateHtml(title, sub){
+  return `<div class="empty-state">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9 10h.01M15 10h.01"/><path d="M8 15c1.2 1 2.6 1.5 4 1.5s2.8-.5 4-1.5"/></svg>
+    <h4>${title}</h4><p>${sub}</p>
+  </div>`;
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+loadDB();
+if(!DB.settings.adminName) DB.settings.adminName = 'Jeanette';
+if(DB.settings.adminPhoto === undefined) DB.settings.adminPhoto = '';
+if(DB.settings.defaultCostPrice === undefined) DB.settings.defaultCostPrice = 950;
+if(DB.settings.defaultProfit === undefined) DB.settings.defaultProfit = 100;
+if(DB.settings.lowStock === undefined) DB.settings.lowStock = 10;
+document.getElementById('brandLogo').src = LOGO_SRC;
+loadSettingsForm();
+resetTypeForm();
+renderAdminProfile();
+renderDashboard();
+</script>
+</body>
+</html>
