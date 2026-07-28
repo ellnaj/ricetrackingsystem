@@ -215,9 +215,39 @@ tbody td{padding:12px 14px; border-bottom:1px solid var(--line); color:var(--ink
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover{background:#fbfaf5;}
 .badge{display:inline-block; padding:3px 10px; border-radius:999px; font-size:11.5px; font-weight:700; letter-spacing:.3px;}
+tfoot .totals-row td{font-weight:800; font-size:15.5px; background:#fdf1de; color:var(--green-900); border-top:2px solid var(--gold-500); border-bottom:none; padding-top:14px; padding-bottom:14px;}
+.count-badge{display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; padding:0 7px; margin-left:8px; border-radius:999px; background:var(--green-700); color:#f4f1e6; font-size:12px; font-weight:700; vertical-align:middle;}
+.table-search{border:1px solid var(--line); background:var(--cream-100); border-radius:9px; padding:8px 12px; font-size:13.5px; color:var(--ink-900); width:220px; max-width:100%;}
+.table-search:focus{outline:2px solid var(--gold-400); outline-offset:1px;}
 .badge.sale{background:var(--ok-bg); color:var(--ok);}
 .badge.restock{background:#fdf1de; color:var(--gold-600);}
+.qty-pos{color:var(--ok); font-weight:700;}
+.qty-neg{color:var(--danger); font-weight:700;}
 .badge.danger{background:var(--danger-bg); color:var(--danger);}
+.badge.status-paid{background:var(--ok-bg); color:var(--ok);}
+.badge.status-pickup{background:#fdf1de; color:var(--gold-600);}
+.badge.status-reserve{background:var(--danger-bg); color:var(--danger);}
+.badge.clickable{cursor:pointer; border:1px solid rgba(0,0,0,0.06);}
+.badge.clickable:hover{filter:brightness(0.95);}
+.status-trigger-btn{
+  display:inline-flex; align-items:center; gap:8px; cursor:pointer; border:1px dashed var(--line);
+  background:var(--cream-100); border-radius:999px; padding:6px 12px 6px 6px; font-size:13px; font-weight:600; color:var(--ink-900);
+}
+.status-trigger-btn:hover{border-color:var(--gold-500);}
+.status-opt-list{display:flex; flex-direction:column; gap:10px; margin-bottom:6px;}
+.status-opt{
+  display:flex; align-items:flex-start; gap:12px; text-align:left; width:100%;
+  border:1.5px solid var(--line); border-radius:var(--radius-md); background:var(--paper);
+  padding:12px 14px; cursor:pointer; transition:border-color .15s ease, background .15s ease;
+}
+.status-opt:hover{border-color:var(--gold-500); background:#fffdf7;}
+.status-opt.selected{border-color:var(--gold-500); background:#fdf6e6;}
+.status-opt .dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.status-opt.status-paid .dot{background:var(--ok);}
+.status-opt.status-pickup .dot{background:var(--gold-500);}
+.status-opt.status-reserve .dot{background:var(--danger);}
+.status-opt .txt strong{display:block; font-size:14px; color:var(--green-900);}
+.status-opt .txt span{display:block; font-size:12.5px; color:var(--ink-600); margin-top:2px;}
 
 .stock-avail-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px;}
 .stock-avail-card{
@@ -544,7 +574,7 @@ footer.hint-strip{
           </div>
           <div class="panel">
             <div class="panel-head">
-              <h3>Top Sold By (Stores)</h3>
+              <h3>Top Sold By (Buyer/Store)</h3>
               <button class="link-btn" data-page="stores">View all</button>
             </div>
             <ul class="rank-list" id="topStoresList"></ul>
@@ -558,7 +588,7 @@ footer.hint-strip{
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Time</th><th>Type</th><th>Store (Sold By)</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr></thead>
+              <thead><tr><th>Time</th><th>Type</th><th>Buyer/Store (Sold By)</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr></thead>
               <tbody id="recentTxBody"></tbody>
             </table>
           </div>
@@ -578,8 +608,23 @@ footer.hint-strip{
               <div class="field"><label>Buyer</label><select id="saleStore" required></select></div>
               <div class="field"><label>Rice Type</label><select id="saleType" required></select></div>
               <div class="field field-highlight"><label>In Stock (Sacks)</label><input type="number" min="1" id="saleQty" required placeholder="e.g. 5"></div>
-              <div class="field"><label>Price / sack (₱)</label><input type="number" min="0" step="0.01" id="salePrice" readonly required></div>
+              <div class="field"><label>Price / sack (₱)</label>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="number" min="0" step="0.01" id="salePrice" readonly required style="flex:1;">
+                  <button type="button" class="icon-btn" id="saleEditPriceBtn" title="Edit cost price &amp; price/sack for this sale"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+                </div>
+                <input type="hidden" id="saleCostPriceOverride">
+                <input type="hidden" id="saleTruckingOverride">
+              </div>
               <div class="field"><label>Total Amount</label><div class="field-total" id="saleTotalPreview">₱0.00</div></div>
+              <div class="field">
+                <label>Sale Status</label>
+                <input type="hidden" id="saleStatus" value="paid">
+                <button type="button" class="status-trigger-btn" id="saleStatusBtn">
+                  <span class="badge status-paid" id="saleStatusBadge">Paid</span>
+                  <span style="color:var(--ink-600);">Change</span>
+                </button>
+              </div>
             </div>
             <div class="form-actions">
               <button type="submit" class="btn btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add Sale</button>
@@ -594,11 +639,11 @@ footer.hint-strip{
           </div>
           <div class="tab-bar">
             <button type="button" class="tab-btn active" data-sales-tab="transactions">Transactions</button>
-            <button type="button" class="tab-btn" data-sales-tab="breakdown">Daily Breakdown</button>
+            <button type="button" class="tab-btn" data-sales-tab="breakdown">Total Breakdown</button>
           </div>
           <div class="filter-bar">
-            <div class="field" style="max-width:200px;"><label>Store</label><select id="salesFilterStore"><option value="">All stores</option></select></div>
-            <div class="field" style="max-width:200px;"><label>Rice Type</label><select id="salesFilterType"><option value="">All types</option></select></div>
+            <div class="field" style="max-width:200px;" id="salesFilterStoreWrap"><label>Store</label><select id="salesFilterStore"><option value="">All stores</option></select></div>
+            <div class="field" style="max-width:200px;" id="salesFilterTypeWrap"><label>Rice Type</label><select id="salesFilterType"><option value="">All types</option></select></div>
             <div class="field" style="max-width:170px;"><label>From</label><input type="date" id="salesFilterFrom"></div>
             <div class="field" style="max-width:170px;"><label>To</label><input type="date" id="salesFilterTo"></div>
             <button class="btn btn-ghost btn-sm" id="salesFilterClear">Reset filters</button>
@@ -607,8 +652,9 @@ footer.hint-strip{
           <div class="tab-pane active" id="salesTab-transactions">
             <div class="table-wrap">
               <table>
-                <thead><tr><th>Date</th><th>Store</th><th>Rice Type</th><th>Qty</th><th>Price/sack</th><th>Total</th><th>Net Profit</th><th>Tithes (10%)</th><th>Take Home</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Date</th><th>Store</th><th>Rice Type</th><th>Qty</th><th>Price/sack</th><th>Status</th><th>Trucking Exp (Total)</th><th>Total Gross</th><th>Net Profit</th><th>Tithes (10%)</th><th>Take Home</th><th>Actions</th></tr></thead>
                 <tbody id="salesTableBody"></tbody>
+                <tfoot id="salesTableFoot"></tfoot>
               </table>
             </div>
             <div id="salesEmpty"></div>
@@ -616,12 +662,15 @@ footer.hint-strip{
 
           <div class="tab-pane" id="salesTab-breakdown">
             <div class="small-cards">
-              <div class="mini-stat highlight"><div class="lbl">Total Remitted</div><div class="val" id="bdRemitted">₱0.00</div></div>
+              <div class="mini-stat highlight"><div class="lbl">Total (To Be Remitted)</div><div class="val" id="bdRemitted">₱0.00</div></div>
               <div class="mini-stat highlight"><div class="lbl">Total Net Profit</div><div class="val" id="bdProfit">₱0.00</div></div>
               <div class="mini-stat"><div class="lbl">Total Tithes</div><div class="val" id="bdTithes">₱0.00</div></div>
               <div class="mini-stat"><div class="lbl">Total Take Home</div><div class="val" id="bdTakeHome">₱0.00</div></div>
+              <div class="mini-stat"><div class="lbl">Total Trucking Exp</div><div class="val" id="bdTrucking">₱0.00</div></div>
               <div class="mini-stat"><div class="lbl">Sacks Sold</div><div class="val" id="bdQty">0</div></div>
+              <div class="mini-stat"><div class="lbl">Reserved (Not Yet Paid)</div><div class="val" id="bdPendingAmount">₱0.00</div></div>
             </div>
+            <p class="sub" style="margin:12px 2px 0;">Only sales marked <strong>Paid</strong> or <strong>Paid – Not Yet Picked Up</strong> count toward the totals above. Reserved sales awaiting payment are excluded until their status is updated.</p>
           </div>
         </div>
       </section>
@@ -654,7 +703,7 @@ footer.hint-strip{
 
         <div class="panel">
           <div class="panel-head">
-            <h3>Available Stock</h3>
+            <h3>Available Stock<span class="count-badge" id="stockAvailTotalBadge">0</span></h3>
             <button type="button" class="btn btn-ghost btn-sm" id="downloadStockBtn" style="display:none;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v13m0 0l-4.5-4.5M12 16l4.5-4.5"/><path d="M4 20h16"/></svg>
               Download for Customers
@@ -664,7 +713,11 @@ footer.hint-strip{
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h3>Restock History</h3></div>
+          <div class="panel-head"><h3>Restock List</h3></div>
+          <p class="sub" style="margin:-6px 0 4px;">One record per rice type &amp; bag size, per day. Adding more stock for the same type/bag size on the same day adds to that day's record instead of creating a new line.</p>
+          <div class="filter-bar">
+            <div class="field" style="max-width:170px;"><label>Day</label><input type="date" id="rsFilterDate"></div>
+          </div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Date</th><th>Rice Type</th><th>Bag Size</th><th>Qty</th><th>Actions</th></tr></thead>
@@ -714,7 +767,10 @@ footer.hint-strip{
           </form>
         </div>
         <div class="panel">
-          <div class="panel-head"><h3>Product List</h3></div>
+          <div class="panel-head">
+            <h3>Product List<span class="count-badge" id="typesCount">0</span></h3>
+            <input type="text" id="typeSearchInput" class="table-search" placeholder="Search rice name…">
+          </div>
           <div class="table-wrap">
             <table>
               <thead><tr><th>Photo</th><th>Rice Type</th><th>Bag Size</th><th>Cost Price</th><th>PROFIT/SACK(₱)</th><th>Selling Price</th><th>Status</th><th>Actions</th></tr></thead>
@@ -789,6 +845,23 @@ footer.hint-strip{
             </div>
           </div>
         </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Monthly Breakdown</h3></div>
+          <p class="sub" style="margin:-6px 0 4px;">Day-by-day totals for the selected month. Revenue and Net Profit only include Paid / Paid – Not Yet Picked Up sales.</p>
+          <div class="filter-bar">
+            <div class="field" style="max-width:170px;"><label>Month</label><select id="sumMonthPicker"></select></div>
+            <div class="field" style="max-width:130px;"><label>Year</label><select id="sumYearPicker"></select></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Day</th><th>Sacks Sold</th><th>Total Gross</th><th>Net Profit</th><th>Sacks Restocked</th><th>Total Tithes</th><th>Total Take Home</th></tr></thead>
+              <tbody id="sumPeriodBody"></tbody>
+              <tfoot id="sumPeriodFoot"></tfoot>
+            </table>
+          </div>
+          <div id="sumPeriodEmpty"></div>
+        </div>
       </section>
 
       <!-- REPORTS -->
@@ -800,6 +873,9 @@ footer.hint-strip{
             <div class="field" style="max-width:170px;"><label>To</label><input type="date" id="repTo"></div>
             <div class="field" style="max-width:190px;"><label>Type</label>
               <select id="repTxType"><option value="all">Sales &amp; Restocks</option><option value="sale">Sales only</option><option value="restock">Restocks only</option></select>
+            </div>
+            <div class="field" style="max-width:170px;"><label>Group By</label>
+              <select id="repGroupBy"><option value="none">Individual Transactions</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select>
             </div>
             <button class="btn btn-primary btn-sm no-print" id="repRunBtn">Run Report</button>
             <button class="btn btn-ghost btn-sm no-print" id="repPrintBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Print</button>
@@ -819,8 +895,9 @@ footer.hint-strip{
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Date</th><th>Type</th><th>Store</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr></thead>
+              <thead id="reportTableHead"><tr><th>Date</th><th>Type</th><th>Store</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr></thead>
               <tbody id="reportTableBody"></tbody>
+              <tfoot id="reportTableFoot"></tfoot>
             </table>
           </div>
           <div id="reportEmpty"></div>
@@ -945,6 +1022,61 @@ function daysAgoISO(n){
   return d.toISOString().slice(0,10);
 }
 
+/* ---------- Period grouping helpers (week / month / year) ---------- */
+function weekKeyOf(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDay(); // 0=Sun..6=Sat
+  const diff = (day===0 ? -6 : 1-day); // shift back to Monday
+  d.setDate(d.getDate()+diff);
+  return d.toISOString().slice(0,10); // Monday of that week, used as sort/group key
+}
+function weekLabelOf(mondayKey){
+  const start = new Date(mondayKey + 'T00:00:00');
+  const end = new Date(start); end.setDate(end.getDate()+6);
+  return `${fmtDateShort(start.toISOString().slice(0,10))} – ${fmtDateShort(end.toISOString().slice(0,10))}, ${start.getFullYear()}`;
+}
+function monthKeyOf(dateStr){ return dateStr.slice(0,7); } // "YYYY-MM"
+function monthLabelOf(key){
+  const d = new Date(key + '-01T00:00:00');
+  return d.toLocaleDateString('en-US', {month:'long', year:'numeric'});
+}
+function yearKeyOf(dateStr){ return dateStr.slice(0,4); } // "YYYY"
+function yearLabelOf(key){ return key; }
+function dayKeyOf(dateStr){ return dateStr; } // "YYYY-MM-DD"
+function dayLabelOf(key){ return fmtDateShort(key); }
+const PERIOD_META = {
+  weekly:  { keyOf:weekKeyOf,  labelOf:weekLabelOf,  colLabel:'Week' },
+  monthly: { keyOf:monthKeyOf, labelOf:monthLabelOf, colLabel:'Month' },
+  yearly:  { keyOf:yearKeyOf,  labelOf:yearLabelOf,  colLabel:'Year' },
+  daily:   { keyOf:dayKeyOf,   labelOf:dayLabelOf,   colLabel:'Day' },
+};
+/* Groups sale + restock transactions into periods. Revenue/Profit only count "paid-like" sales
+   (Paid / Paid - Not Yet Picked Up) — Reserved sales are excluded, same rule as the rest of the app. */
+function buildPeriodBreakdown(rows, periodType){
+  const meta = PERIOD_META[periodType] || PERIOD_META.monthly;
+  const byPeriod = {};
+  rows.forEach(t=>{
+    const key = meta.keyOf(t.date);
+    if(!byPeriod[key]) byPeriod[key] = { key, sacksSold:0, revenue:0, profit:0, sacksRestocked:0, restockCost:0 };
+    const p = byPeriod[key];
+    if(t.kind==='sale'){
+      p.sacksSold += t.qty;
+      if(isSalePaidLike(t)){
+        const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
+        const profit = ((t.price - costBasis) - (t.trucking||0)) * t.qty;
+        p.revenue += t.amount;
+        p.profit += profit;
+      }
+    } else if(t.kind==='restock'){
+      p.sacksRestocked += t.qty;
+      p.restockCost += (t.amount||0);
+    }
+  });
+  return Object.values(byPeriod)
+    .sort((a,b)=> b.key.localeCompare(a.key))
+    .map(p=> ({...p, label: meta.labelOf(p.key)}));
+}
+
 /* ---------- Seed data ---------- */
 function emptyDB(){
   return {
@@ -969,8 +1101,24 @@ function storeColorOf(id){
 /* ---------- Supabase row <-> app-model mapping ---------- */
 function storeFromRow(r){ return { id:r.id, name:r.name, contact:r.contact||'', phone:r.phone||'', color:r.color||'' }; }
 function productFromRow(r){ return { id:r.id, name:r.name, bagSize:r.bag_size||'25kg', costPrice:Number(r.cost_price)||0, profit:Number(r.profit)||0, sellingPrice:Number(r.selling_price)||0, stock:Number(r.stock)||0, photo:r.photo||'' }; }
-function saleFromRow(r){ return { id:r.id, kind:'sale', date:r.sale_date, ts:Number(r.ts)||0, storeId:r.store_id, typeId:r.product_id, qty:Number(r.qty)||0, price:Number(r.price)||0, costPrice:Number(r.cost_price)||0, amount:Number(r.amount)||0 }; }
-function restockFromRow(r){ return { id:r.id, kind:'restock', date:r.restock_date, ts:Number(r.ts)||0, storeId:null, typeId:r.product_id, qty:Number(r.qty)||0, cost:Number(r.cost)||0, amount:Number(r.amount)||0, supplier:r.supplier||'' }; }
+function saleFromRow(r){ return { id:r.id, kind:'sale', date:r.sale_date, ts:Number(r.ts)||0, storeId:r.store_id, typeId:r.product_id, qty:Number(r.qty)||0, price:Number(r.price)||0, costPrice:Number(r.cost_price)||0, amount:Number(r.amount)||0, trucking:Number(r.trucking_expense)||0, status:r.status||'paid' }; }
+/* A sale counts toward Total Gross / Net Profit / Tithes / Take Home / Remitted only once money has actually
+   changed hands — i.e. status is "paid" or "pickup" (paid, just not yet picked up). "reserve" (not yet paid) is excluded. */
+function isSalePaidLike(t){ return (t.status||'paid') !== 'reserve'; }
+const SALE_STATUS_META = {
+  paid:    { label:'Paid',                          sub:'Money received in full.',                 cls:'status-paid' },
+  pickup:  { label:'Paid – Not Yet Picked Up',       sub:'Money received, sacks still with you.',   cls:'status-pickup' },
+  reserve: { label:'Reserved – Not Yet Paid',        sub:'Sacks held, no payment received yet.',     cls:'status-reserve' },
+};
+function saleStatusBadgeHtml(status){
+  const meta = SALE_STATUS_META[status] || SALE_STATUS_META.paid;
+  return `<span class="badge ${meta.cls}">${meta.label}</span>`;
+}
+function saleStatusBadgeClickableHtml(status, txId){
+  const meta = SALE_STATUS_META[status] || SALE_STATUS_META.paid;
+  return `<span class="badge clickable ${meta.cls}" data-status-tx="${txId}" title="Click to change status">${meta.label}</span>`;
+}
+function restockFromRow(r){ return { id:r.id, kind:'restock', date:r.restock_date, ts:Number(r.ts)||0, storeId:null, typeId:r.product_id, qty:Number(r.qty)||0, cost:Number(r.cost)||0, amount:Number(r.amount)||0, supplier:r.supplier||'', bagSize:r.bag_size||null }; }
 function settingsFromRow(r){
   return { id:r.id, bizName:r.business_name||'JLY Rice Choice', currency:r.currency||'₱', lowStock:Number(r.low_stock ?? 10),
     defaultCostPrice:Number(r.default_cost_price ?? 950), defaultProfit:Number(r.default_profit ?? 100),
@@ -1047,16 +1195,120 @@ async function dbDeleteProduct(id){
   return true;
 }
 async function dbInsertSale(t){
-  const { error } = await sb.from('sales').insert({ id:t.id, sale_date:t.date, ts:t.ts, store_id:t.storeId, product_id:t.typeId, qty:t.qty, price:t.price, cost_price:t.costPrice, amount:t.amount });
-  if(error){ console.error(error); toast('Could not save sale to Supabase.', 'danger'); }
+  const payload = { id:t.id, sale_date:t.date, ts:t.ts, store_id:t.storeId, product_id:t.typeId, qty:t.qty, price:t.price, cost_price:t.costPrice, amount:t.amount, trucking_expense:t.trucking||0, status:t.status||'paid' };
+  const { error } = await sb.from('sales').insert(payload);
+  if(error){
+    if(isMissingStatusColumnError(error)){
+      const { status, ...rest } = payload;
+      const retry = await sb.from('sales').insert(rest);
+      if(retry.error){
+        if(isMissingTruckingColumnError(retry.error)){
+          const { trucking_expense, ...rest2 } = rest;
+          const retry2 = await sb.from('sales').insert(rest2);
+          if(retry2.error){ console.error(retry2.error); toast('Could not save sale to Supabase.', 'danger'); }
+          else warnMissingTruckingColumnOnce();
+        } else { console.error(retry.error); toast('Could not save sale to Supabase.', 'danger'); }
+      } else warnMissingStatusColumnOnce();
+      return;
+    }
+    if(isMissingTruckingColumnError(error)){
+      const { trucking_expense, ...rest } = payload;
+      const retry = await sb.from('sales').insert(rest);
+      if(retry.error){ console.error(retry.error); toast('Could not save sale to Supabase.', 'danger'); }
+      else warnMissingTruckingColumnOnce();
+      return;
+    }
+    console.error(error); toast('Could not save sale to Supabase.', 'danger');
+  }
+}
+async function dbUpdateSale(t){
+  const payload = { sale_date:t.date, store_id:t.storeId, qty:t.qty, price:t.price, cost_price:t.costPrice, amount:t.amount, trucking_expense:t.trucking||0, status:t.status||'paid' };
+  const { error } = await sb.from('sales').update(payload).eq('id', t.id);
+  if(error){
+    if(isMissingStatusColumnError(error)){
+      const { status, ...rest } = payload;
+      const retry = await sb.from('sales').update(rest).eq('id', t.id);
+      if(retry.error){
+        if(isMissingTruckingColumnError(retry.error)){
+          const { trucking_expense, ...rest2 } = rest;
+          const retry2 = await sb.from('sales').update(rest2).eq('id', t.id);
+          if(retry2.error){ console.error(retry2.error); toast('Could not update sale in Supabase.', 'danger'); }
+          else warnMissingTruckingColumnOnce();
+        } else { console.error(retry.error); toast('Could not update sale in Supabase.', 'danger'); }
+      } else warnMissingStatusColumnOnce();
+      return;
+    }
+    if(isMissingTruckingColumnError(error)){
+      const { trucking_expense, ...rest } = payload;
+      const retry = await sb.from('sales').update(rest).eq('id', t.id);
+      if(retry.error){ console.error(retry.error); toast('Could not update sale in Supabase.', 'danger'); }
+      else warnMissingTruckingColumnOnce();
+      return;
+    }
+    console.error(error); toast('Could not update sale in Supabase.', 'danger');
+  }
+}
+function isMissingTruckingColumnError(error){
+  const msg = (error && (error.message||'')) + '';
+  return msg.includes('trucking_expense');
+}
+function isMissingStatusColumnError(error){
+  const msg = (error && (error.message||'')) + '';
+  return msg.includes("'status'") || msg.includes('status column') || (msg.includes('status') && msg.toLowerCase().includes('column'));
+}
+let truckingColumnWarned = false;
+function warnMissingTruckingColumnOnce(){
+  if(truckingColumnWarned) return;
+  truckingColumnWarned = true;
+  toast('Trucking Exp/sack was saved locally but not in Supabase — add a "trucking_expense" column to the sales table to persist it. See instructions provided.', 'danger');
+}
+let statusColumnWarned = false;
+function warnMissingStatusColumnOnce(){
+  if(statusColumnWarned) return;
+  statusColumnWarned = true;
+  toast('Sale Status was saved locally but not in Supabase — add a "status" text column to the sales table to persist it.', 'danger');
 }
 async function dbDeleteSale(id){
   const { error } = await sb.from('sales').delete().eq('id', id);
   if(error){ console.error(error); toast('Could not delete sale in Supabase.', 'danger'); }
 }
 async function dbInsertRestock(t){
-  const { error } = await sb.from('restocks').insert({ id:t.id, restock_date:t.date, ts:t.ts, product_id:t.typeId, qty:t.qty, cost:t.cost||null, amount:t.amount||null, supplier:t.supplier||null });
-  if(error){ console.error(error); toast('Could not save restock to Supabase.', 'danger'); }
+  const payload = { id:t.id, restock_date:t.date, ts:t.ts, product_id:t.typeId, qty:t.qty, cost:t.cost||null, amount:t.amount||null, supplier:t.supplier||null, bag_size:t.bagSize||null };
+  const { error } = await sb.from('restocks').insert(payload);
+  if(error){
+    if(isMissingBagSizeColumnError(error)){
+      const { bag_size, ...rest } = payload;
+      const retry = await sb.from('restocks').insert(rest);
+      if(retry.error){ console.error(retry.error); toast('Could not save restock to Supabase.', 'danger'); }
+      else warnMissingBagSizeColumnOnce();
+      return;
+    }
+    console.error(error); toast('Could not save restock to Supabase.', 'danger');
+  }
+}
+async function dbUpdateRestock(t){
+  const payload = { qty:t.qty, cost:t.cost||null, amount:t.amount||null, bag_size:t.bagSize||null };
+  const { error } = await sb.from('restocks').update(payload).eq('id', t.id);
+  if(error){
+    if(isMissingBagSizeColumnError(error)){
+      const { bag_size, ...rest } = payload;
+      const retry = await sb.from('restocks').update(rest).eq('id', t.id);
+      if(retry.error){ console.error(retry.error); toast('Could not update restock in Supabase.', 'danger'); }
+      else warnMissingBagSizeColumnOnce();
+      return;
+    }
+    console.error(error); toast('Could not update restock in Supabase.', 'danger');
+  }
+}
+function isMissingBagSizeColumnError(error){
+  const msg = (error && (error.message||'')) + '';
+  return msg.includes('bag_size');
+}
+let bagSizeColumnWarned = false;
+function warnMissingBagSizeColumnOnce(){
+  if(bagSizeColumnWarned) return;
+  bagSizeColumnWarned = true;
+  toast('Bag Size (restocks) was saved locally but not in Supabase — add a "bag_size" text column to the restocks table to persist it.', 'danger');
 }
 async function dbDeleteRestock(id){
   const { error } = await sb.from('restocks').delete().eq('id', id);
@@ -1233,6 +1485,7 @@ function goToPage(name){
   pages.forEach(p=>{
     document.getElementById('page-'+p).classList.toggle('active', p===name);
   });
+  try{ sessionStorage.setItem('lastPage', name); }catch(err){}
   document.querySelectorAll('.nav-link[data-page]').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.page === name);
   });
@@ -1284,12 +1537,16 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
    Helpers to populate selects
 ========================================================= */
 function fillStoreSelect(sel, includeAll){
+  const list = [...DB.stores].sort((a,b)=> (a.name||'').localeCompare(b.name||'', undefined, {sensitivity:'base'}));
   sel.innerHTML = (includeAll ? '<option value="">All stores</option>' : '') +
-    DB.stores.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    list.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
 }
-function fillTypeSelect(sel, includeAll){
+function fillTypeSelect(sel, includeAll, sortAlpha){
+  const list = sortAlpha
+    ? [...DB.types].sort((a,b)=> (a.name||'').localeCompare(b.name||'', undefined, {sensitivity:'base'}))
+    : DB.types;
   sel.innerHTML = (includeAll ? '<option value="">All types</option>' : '') +
-    DB.types.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+    list.map(t=>`<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
 }
 function storeName(id){ const s = DB.stores.find(x=>x.id===id); return s ? s.name : '—'; }
 function typeInfo(id){ return DB.types.find(x=>x.id===id) || {name:'—', price:0}; }
@@ -1317,7 +1574,7 @@ function renderDashboard(){
   const today = todayISO();
   const todaysSales = DB.tx.filter(t=>t.kind==='sale' && t.date===today);
   const sacksToday = todaysSales.reduce((a,t)=>a+t.qty,0);
-  const salesToday = todaysSales.reduce((a,t)=>a+t.amount,0);
+  const salesToday = todaysSales.filter(isSalePaidLike).reduce((a,t)=>a+t.amount,0);
   const stockTotal = DB.types.reduce((a,t)=>a+t.stock,0);
 
   document.getElementById('statSacksSold').innerHTML = sacksToday + ' <span class="unit">sacks</span>';
@@ -1379,7 +1636,7 @@ function drawSalesChart(rangeDays){
     labels.push(fmtDateShort(d));
     const daySales = DB.tx.filter(t=>t.kind==='sale' && t.date===d);
     sacksData.push(daySales.reduce((a,t)=>a+t.qty,0));
-    salesData.push(daySales.reduce((a,t)=>a+t.amount,0));
+    salesData.push(daySales.filter(isSalePaidLike).reduce((a,t)=>a+t.amount,0));
   }
   const ctx = document.getElementById('salesChart').getContext('2d');
   if(salesChart) salesChart.destroy();
@@ -1418,6 +1675,10 @@ function renderSalesPage(){
   syncSalePriceFromType();
   updateSalePreview();
   updateBuyerColorIndicator();
+  const activeTabBtn = document.querySelector('[data-sales-tab].active');
+  const activeTab = activeTabBtn ? activeTabBtn.dataset.salesTab : 'transactions';
+  document.getElementById('salesFilterStoreWrap').style.display = activeTab==='breakdown' ? 'none' : '';
+  document.getElementById('salesFilterTypeWrap').style.display = activeTab==='breakdown' ? 'none' : '';
   renderSalesTable();
   renderDailyBreakdown();
 }
@@ -1428,7 +1689,8 @@ function updateBuyerColorIndicator(){
 }
 document.getElementById('saleStore').addEventListener('change', updateBuyerColorIndicator);
 function fillSaleTypeSelect(sel){
-  const inStock = DB.types.filter(t=>t.stock > 0);
+  const inStock = DB.types.filter(t=>t.stock > 0)
+    .sort((a,b)=> (a.name||'').localeCompare(b.name||'', undefined, {sensitivity:'base'}));
   if(inStock.length===0){
     sel.innerHTML = '<option value="">No stock available</option>';
     return;
@@ -1438,10 +1700,13 @@ function fillSaleTypeSelect(sel){
   ).join('');
 }
 function sellingPriceOf(t){ return (t.costPrice ?? 950) + (t.profit||0); }
+function trimNum(n){ return (Math.round((n + Number.EPSILON) * 100) / 100).toString(); }
 function syncSalePriceFromType(){
   const typeId = document.getElementById('saleType').value;
   const t = typeInfo(typeId);
-  document.getElementById('salePrice').value = t.id ? sellingPriceOf(t).toFixed(2) : '';
+  document.getElementById('salePrice').value = t.id ? trimNum(sellingPriceOf(t)) : '';
+  document.getElementById('saleCostPriceOverride').value = '';
+  document.getElementById('saleTruckingOverride').value = '';
   document.getElementById('saleQty').value = t.id ? (t.stock ?? '') : '';
   document.getElementById('saleQty').max = t.id ? (t.stock ?? '') : '';
   updateSalePreview();
@@ -1455,6 +1720,105 @@ document.getElementById('saleType').addEventListener('change', syncSalePriceFrom
 document.getElementById('saleQty').addEventListener('input', updateSalePreview);
 document.getElementById('salePrice').addEventListener('input', updateSalePreview);
 
+/* ---------- Pop-up: edit cost price / price-per-sack for a sale ---------- */
+function openSalePricePopup(){
+  const typeId = document.getElementById('saleType').value;
+  if(!typeId){ toast('Select a rice type first.', 'danger'); return; }
+  const type = DB.types.find(t=>t.id===typeId);
+  if(!type) return;
+  const overrideRaw = document.getElementById('saleCostPriceOverride').value;
+  const currentCost = overrideRaw !== '' ? parseFloat(overrideRaw) : (type.costPrice ?? 950);
+  const currentPrice = parseFloat(document.getElementById('salePrice').value) || sellingPriceOf(type);
+  const currentProfit = currentPrice - currentCost;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-box" style="max-width:420px;">
+    <h3>Edit Price for This Sale</h3>
+    <p>Adjust the cost price and profit per sack for this sale only. The product's default pricing won't change.</p>
+    <div class="form-grid" style="margin-bottom:6px;">
+      <div class="field"><label>Cost Price (₱)</label><input type="number" min="0" step="0.01" id="popCostPrice" value="${trimNum(currentCost)}"></div>
+      <div class="field"><label>Profit/Sack (₱)</label><input type="number" min="0" step="0.01" id="popProfit" value="${trimNum(currentProfit)}"></div>
+      <div class="field"><label>Trucking Expense/Sack (₱)</label><input type="number" min="0" step="0.01" id="popTrucking" value="0"></div>
+      <div class="field"><label>Price / Sack (₱)</label><div class="field-total" id="popPricePreview">${fmtMoney(currentCost + currentProfit)}</div></div>
+    </div>
+    <p class="sub" style="margin:0 0 14px;">Trucking expense doesn't affect the cost price, profit/sack, or Total Gross — but it is subtracted from Net Profit for this sale.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-act="cancel">Cancel</button>
+      <button class="btn btn-primary" data-act="save">Save</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const popCost = document.getElementById('popCostPrice');
+  const popProfit = document.getElementById('popProfit');
+  const popTrucking = document.getElementById('popTrucking');
+  const popPreview = document.getElementById('popPricePreview');
+  function updatePopPreview(){
+    const c = parseFloat(popCost.value)||0;
+    const p = parseFloat(popProfit.value)||0;
+    popPreview.textContent = fmtMoney(c+p);
+  }
+  popCost.addEventListener('input', updatePopPreview);
+  popProfit.addEventListener('input', updatePopPreview);
+  overlay.addEventListener('click', (e)=>{
+    if(e.target === overlay || e.target.dataset.act === 'cancel'){ overlay.remove(); return; }
+    if(e.target.dataset.act === 'save'){
+      const newCost = parseFloat(popCost.value);
+      const newProfit = parseFloat(popProfit.value);
+      const newTrucking = parseFloat(popTrucking.value) || 0;
+      if(isNaN(newCost) || newCost < 0 || isNaN(newProfit) || newProfit < 0){ toast('Enter valid amounts.', 'danger'); return; }
+      if(newTrucking < 0){ toast('Trucking expense cannot be negative.', 'danger'); return; }
+      const newPrice = newCost + newProfit;
+      document.getElementById('saleCostPriceOverride').value = newCost;
+      document.getElementById('saleTruckingOverride').value = newTrucking;
+      document.getElementById('salePrice').value = trimNum(newPrice);
+      updateSalePreview();
+      overlay.remove();
+      toast('Price updated for this sale.');
+    }
+  });
+}
+document.getElementById('saleEditPriceBtn').addEventListener('click', openSalePricePopup);
+
+/* ---------- Pop-up: choose sale status (Paid / Paid-Not-Yet-Picked-Up / Reserved-Not-Yet-Paid) ---------- */
+function openSaleStatusPopup(currentStatus, onPick){
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const opts = ['paid','pickup','reserve'].map(key=>{
+    const meta = SALE_STATUS_META[key];
+    return `<button type="button" class="status-opt ${meta.cls} ${key===currentStatus?'selected':''}" data-status="${key}">
+      <span class="dot"></span>
+      <span class="txt"><strong>${meta.label}</strong><span>${meta.sub}</span></span>
+    </button>`;
+  }).join('');
+  overlay.innerHTML = `<div class="modal-box" style="max-width:420px;">
+    <h3>Set Sale Status</h3>
+    <p>Only <strong>Paid</strong> and <strong>Paid – Not Yet Picked Up</strong> sales count toward Total Gross and Net Profit. Reserved sales are excluded until they're marked paid.</p>
+    <div class="status-opt-list">${opts}</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-act="cancel">Cancel</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (e)=>{
+    if(e.target === overlay || e.target.dataset.act === 'cancel'){ overlay.remove(); return; }
+    const optBtn = e.target.closest('[data-status]');
+    if(optBtn){
+      onPick(optBtn.dataset.status);
+      overlay.remove();
+    }
+  });
+}
+function setSaleStatusUI(status){
+  document.getElementById('saleStatus').value = status;
+  const meta = SALE_STATUS_META[status] || SALE_STATUS_META.paid;
+  const badge = document.getElementById('saleStatusBadge');
+  badge.className = `badge ${meta.cls}`;
+  badge.textContent = meta.label;
+}
+document.getElementById('saleStatusBtn').addEventListener('click', ()=>{
+  openSaleStatusPopup(document.getElementById('saleStatus').value, setSaleStatusUI);
+});
+
 document.getElementById('saleForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const date = document.getElementById('saleDate').value || todayISO();
@@ -1462,6 +1826,7 @@ document.getElementById('saleForm').addEventListener('submit', async (e)=>{
   const typeId = document.getElementById('saleType').value;
   const qty = parseInt(document.getElementById('saleQty').value, 10);
   const price = parseFloat(document.getElementById('salePrice').value);
+  const status = document.getElementById('saleStatus').value || 'paid';
 
   if(!storeId || !typeId){ toast('Please select a buyer and rice type first.', 'danger'); return; }
   if(!qty || qty<=0){ toast('Enter a valid quantity.', 'danger'); return; }
@@ -1471,7 +1836,11 @@ document.getElementById('saleForm').addEventListener('submit', async (e)=>{
     toast(`Only ${type.stock} sacks of ${type.name} in stock.`, 'danger'); return;
   }
 
-  const newSale = { id:uid(), kind:'sale', date, ts:Date.now(), storeId, typeId, qty, price, costPrice:(type.costPrice ?? 950), amount:qty*price };
+  const overrideRaw = document.getElementById('saleCostPriceOverride').value;
+  const costBasis = overrideRaw !== '' ? (parseFloat(overrideRaw) || 0) : (type.costPrice ?? 950);
+  const truckingRaw = document.getElementById('saleTruckingOverride').value;
+  const trucking = truckingRaw !== '' ? (parseFloat(truckingRaw) || 0) : 0;
+  const newSale = { id:uid(), kind:'sale', date, ts:Date.now(), storeId, typeId, qty, price, costPrice:costBasis, amount:qty*price, trucking:trucking, status };
   DB.tx.push(newSale);
   type.stock -= qty;
   await Promise.all([ dbInsertSale(newSale), dbUpdateProductStock(type.id, type.stock) ]);
@@ -1480,6 +1849,7 @@ document.getElementById('saleForm').addEventListener('submit', async (e)=>{
   document.getElementById('saleDate').value = todayISO();
   fillSaleTypeSelect(document.getElementById('saleType'));
   syncSalePriceFromType();
+  setSaleStatusUI('paid');
   updateBuyerColorIndicator();
   renderSalesTable();
   renderDailyBreakdown();
@@ -1488,6 +1858,7 @@ document.getElementById('saleResetBtn').addEventListener('click', ()=>{
   document.getElementById('saleForm').reset();
   document.getElementById('saleDate').value = todayISO();
   syncSalePriceFromType();
+  setSaleStatusUI('paid');
   updateBuyerColorIndicator();
 });
 
@@ -1506,34 +1877,73 @@ function getFilteredSales(){
 function renderSalesTable(){
   const rows = getFilteredSales();
   const body = document.getElementById('salesTableBody');
+  const foot = document.getElementById('salesTableFoot');
   const emptyEl = document.getElementById('salesEmpty');
   if(rows.length===0){
     body.innerHTML='';
+    foot.innerHTML='';
     emptyEl.innerHTML = emptyStateHtml('No sales found', 'Try adjusting your filters, or log a new sale above.');
     return;
   }
   emptyEl.innerHTML = '';
+  let totalQty=0, totalAmount=0, totalProfit=0, totalTithes=0, totalTakeHome=0, totalTrucking=0;
   body.innerHTML = rows.map(t=>{
+    const status = t.status || 'paid';
+    const counted = isSalePaidLike(t);
     const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
-    const profit = (t.price - costBasis) * t.qty;
+    const profit = ((t.price - costBasis) - (t.trucking||0)) * t.qty;
     const tithes = profit * 0.10;
     const takeHome = profit - tithes;
+    totalQty += t.qty; totalTrucking += (t.trucking||0)*t.qty;
+    if(counted){ totalAmount += t.amount; totalProfit += profit; totalTithes += tithes; totalTakeHome += takeHome; }
+    const notCountedNote = counted ? '' : '<div style="font-size:11px;color:var(--danger);font-weight:600;margin-top:2px;">not counted yet</div>';
     return `
     <tr>
       <td>${fmtDate(t.date)}</td>
       <td><span class="store-chip" style="background:${storeColorOf(t.storeId)}1c;color:${storeColorOf(t.storeId)};border-color:${storeColorOf(t.storeId)}55;"><span class="store-dot" style="background:${storeColorOf(t.storeId)}"></span>${escapeHtml(storeName(t.storeId))}</span></td>
-      <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
+      <td>${escapeHtml(typeInfo(t.typeId).name)} <span style="color:var(--ink-400); font-size:12.5px;">(${escapeHtml(typeInfo(t.typeId).bagSize || '25kg')})</span></td>
       <td>${t.qty}</td>
       <td>${fmtMoney(t.price)}</td>
-      <td class="cell-highlight">${fmtMoney(t.amount)}</td>
-      <td class="cell-highlight">${fmtMoney(profit)}</td>
+      <td>${saleStatusBadgeClickableHtml(status, t.id)}</td>
+      <td>${fmtMoney((t.trucking||0)*t.qty)}</td>
+      <td class="cell-highlight">${fmtMoney(t.amount)}${notCountedNote}</td>
+      <td class="cell-highlight">${fmtMoney(profit)}${notCountedNote}</td>
       <td>${fmtMoney(tithes)}</td>
       <td>${fmtMoney(takeHome)}</td>
       <td><div class="row-actions">
+        <button class="icon-btn" data-edit-tx="${t.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
         <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
       </div></td>
     </tr>`;
   }).join('');
+  foot.innerHTML = `<tr class="totals-row">
+      <td colspan="3">Total (${rows.length} sale${rows.length===1?'':'s'})</td>
+      <td>${totalQty}</td>
+      <td>—</td>
+      <td>—</td>
+      <td>${fmtMoney(totalTrucking)}</td>
+      <td class="cell-highlight">${fmtMoney(totalAmount)}</td>
+      <td class="cell-highlight">${fmtMoney(totalProfit)}</td>
+      <td>${fmtMoney(totalTithes)}</td>
+      <td>${fmtMoney(totalTakeHome)}</td>
+      <td></td>
+    </tr>`;
+  body.querySelectorAll('[data-edit-tx]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openEditSaleModal(btn.dataset.editTx));
+  });
+  body.querySelectorAll('[data-status-tx]').forEach(badge=>{
+    badge.addEventListener('click', ()=>{
+      const tx = DB.tx.find(x=>x.id===badge.dataset.statusTx);
+      if(!tx) return;
+      openSaleStatusPopup(tx.status||'paid', async (newStatus)=>{
+        tx.status = newStatus;
+        await dbUpdateSale(tx);
+        toast('Sale status updated.');
+        renderSalesTable();
+        renderDailyBreakdown();
+      });
+    });
+  });
   body.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       confirmModal('Delete sale?', 'This will remove the transaction and return the sacks to stock.', async ()=>{
@@ -1550,6 +1960,97 @@ function renderSalesTable(){
         }
       });
     });
+  });
+}
+
+/* ---------- Pop-up: edit a logged transaction (store, qty, price) ---------- */
+function openEditSaleModal(id){
+  const tx = DB.tx.find(x=>x.id===id);
+  if(!tx) return;
+  const type = DB.types.find(t=>t.id===tx.typeId);
+  const availableStock = (type ? type.stock : 0) + tx.qty; // stock ceiling including this sale's own sacks
+  const costBasis = tx.costPrice ?? (typeInfo(tx.typeId).costPrice ?? 950);
+  const initialProfitSack = tx.price - costBasis;
+  const storeOptions = DB.stores.map(s=>`<option value="${s.id}" ${s.id===tx.storeId?'selected':''}>${escapeHtml(s.name)}</option>`).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `<div class="modal-box" style="max-width:440px;">
+    <h3>Edit Transaction</h3>
+    <p>Update the store, quantity, cost price, profit, or trucking expense for this sale only. The product's default pricing won't change. Stock adjusts automatically.</p>
+    <div class="form-grid" style="margin-bottom:10px;">
+      <div class="field"><label>Store</label><select id="editTxStore">${storeOptions}</select></div>
+      <div class="field"><label>Qty (Sacks)</label><input type="number" min="1" max="${availableStock}" id="editTxQty" value="${tx.qty}"></div>
+      <div class="field"><label>Cost Price (₱)</label><input type="number" min="0" step="0.01" id="editTxCostPrice" value="${trimNum(costBasis)}"></div>
+      <div class="field"><label>Profit / Sack (₱)</label><input type="number" min="0" step="0.01" id="editTxProfit" value="${trimNum(initialProfitSack)}"></div>
+      <div class="field"><label>Trucking Expense/Sack (₱)</label><input type="number" min="0" step="0.01" id="editTxTrucking" value="${trimNum(tx.trucking||0)}"></div>
+      <div class="field"><label>Price / Sack (₱)</label><div class="field-total" id="editTxPricePreview">${fmtMoney(costBasis + initialProfitSack)}</div></div>
+      <div class="field">
+        <label>Sale Status</label>
+        <input type="hidden" id="editTxStatus" value="${tx.status||'paid'}">
+        <button type="button" class="status-trigger-btn" id="editTxStatusBtn">
+          <span id="editTxStatusBadge">${saleStatusBadgeHtml(tx.status||'paid')}</span>
+          <span style="color:var(--ink-600);">Change</span>
+        </button>
+      </div>
+    </div>
+    <p class="sub" style="margin:0 0 16px;">Rice Type: <strong>${escapeHtml(typeInfo(tx.typeId).name)}</strong> (locked) · Max available: ${availableStock} sacks<br>Trucking expense doesn't affect the cost price, profit/sack, or Total Gross — but it is subtracted from Net Profit for this sale. Only Paid / Paid – Not Yet Picked Up sales count toward Total Gross &amp; Net Profit.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" data-act="cancel">Cancel</button>
+      <button class="btn btn-primary" data-act="save">Save Changes</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const costInput = document.getElementById('editTxCostPrice');
+  const profitInput = document.getElementById('editTxProfit');
+  const pricePreview = document.getElementById('editTxPricePreview');
+  function updatePricePreview(){
+    const c = parseFloat(costInput.value)||0;
+    const p = parseFloat(profitInput.value)||0;
+    pricePreview.textContent = fmtMoney(c+p);
+  }
+  costInput.addEventListener('input', updatePricePreview);
+  profitInput.addEventListener('input', updatePricePreview);
+  document.getElementById('editTxStatusBtn').addEventListener('click', ()=>{
+    openSaleStatusPopup(document.getElementById('editTxStatus').value, (newStatus)=>{
+      document.getElementById('editTxStatus').value = newStatus;
+      document.getElementById('editTxStatusBadge').innerHTML = saleStatusBadgeHtml(newStatus);
+    });
+  });
+  overlay.addEventListener('click', async (e)=>{
+    if(e.target === overlay || e.target.dataset.act === 'cancel'){ overlay.remove(); return; }
+    if(e.target.dataset.act === 'save'){
+      const newStoreId = document.getElementById('editTxStore').value;
+      const newQty = parseInt(document.getElementById('editTxQty').value, 10);
+      const newCost = parseFloat(costInput.value);
+      const newProfit = parseFloat(profitInput.value);
+      const newTrucking = parseFloat(document.getElementById('editTxTrucking').value) || 0;
+      const newStatus = document.getElementById('editTxStatus').value || 'paid';
+      if(!newStoreId){ toast('Select a store.', 'danger'); return; }
+      if(!newQty || newQty<=0){ toast('Enter a valid quantity.', 'danger'); return; }
+      if(newQty > availableStock){ toast(`Only ${availableStock} sacks of ${typeInfo(tx.typeId).name} available.`, 'danger'); return; }
+      if(isNaN(newCost) || newCost < 0){ toast('Enter a valid cost price.', 'danger'); return; }
+      if(isNaN(newProfit) || newProfit <= 0){ toast('Profit/Sack must be greater than 0.', 'danger'); return; }
+      if(newTrucking < 0){ toast('Trucking expense cannot be negative.', 'danger'); return; }
+      const newPrice = newCost + newProfit;
+
+      if(type) type.stock = availableStock - newQty;
+      tx.storeId = newStoreId;
+      tx.qty = newQty;
+      tx.price = newPrice;
+      tx.costPrice = newCost; // per-sale only - the product's default cost price is untouched
+      tx.trucking = newTrucking;
+      tx.amount = newQty * newPrice; // Total Gross never includes trucking
+      tx.status = newStatus;
+
+      await Promise.all([ dbUpdateSale(tx), type ? dbUpdateProductStock(type.id, type.stock) : Promise.resolve() ]);
+      toast('Transaction updated.');
+      overlay.remove();
+      fillSaleTypeSelect(document.getElementById('saleType'));
+      renderSalesTable();
+      renderDailyBreakdown();
+      if(document.getElementById('page-restock').classList.contains('active')) renderAvailableStock();
+      if(document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+    }
   });
 }
 ['salesFilterStore','salesFilterType','salesFilterFrom','salesFilterTo'].forEach(id=>{
@@ -1570,47 +2071,70 @@ document.querySelectorAll('[data-sales-tab]').forEach(btn=>{
     const target = btn.dataset.salesTab;
     document.getElementById('salesTab-transactions').classList.toggle('active', target==='transactions');
     document.getElementById('salesTab-breakdown').classList.toggle('active', target==='breakdown');
+    document.getElementById('salesFilterStoreWrap').style.display = target==='breakdown' ? 'none' : '';
+    document.getElementById('salesFilterTypeWrap').style.display = target==='breakdown' ? 'none' : '';
     if(target==='breakdown') renderDailyBreakdown();
   });
 });
 
+function getDateFilteredSales(){
+  const from = document.getElementById('salesFilterFrom').value;
+  const to = document.getElementById('salesFilterTo').value;
+  return DB.tx.filter(t=>t.kind==='sale')
+    .filter(t=> !from || t.date>=from)
+    .filter(t=> !to || t.date<=to)
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.ts||0)-(a.ts||0));
+}
 function getDailyBreakdown(){
-  const rows = getFilteredSales();
+  // Total Breakdown only respects the date range - store/type filters don't apply here.
+  const rows = getDateFilteredSales();
   const byDate = {};
   rows.forEach(t=>{
+    const counted = isSalePaidLike(t); // only Paid / Paid-Not-Yet-Picked-Up count toward remitted/profit/tithes/take-home
     const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
-    const profit = (t.price - costBasis) * t.qty;
+    const remitted = costBasis * t.qty; // amount owed back based on cost price, not the selling total
+    const profit = ((t.price - costBasis) - (t.trucking||0)) * t.qty;
     const tithes = profit * 0.10;
     const takeHome = profit - tithes;
-    if(!byDate[t.date]) byDate[t.date] = {date:t.date, qty:0, remitted:0, profit:0, tithes:0, takeHome:0};
+    const trucking = (t.trucking||0) * t.qty;
+    if(!byDate[t.date]) byDate[t.date] = {date:t.date, qty:0, remitted:0, profit:0, tithes:0, takeHome:0, trucking:0, pendingAmount:0};
     const d = byDate[t.date];
     d.qty += t.qty;
-    d.remitted += t.amount;
-    d.profit += profit;
-    d.tithes += tithes;
-    d.takeHome += takeHome;
+    d.trucking += trucking;
+    if(counted){
+      d.remitted += remitted;
+      d.profit += profit;
+      d.tithes += tithes;
+      d.takeHome += takeHome;
+    } else {
+      d.pendingAmount += t.amount;
+    }
   });
   return Object.values(byDate).sort((a,b)=> b.date.localeCompare(a.date));
 }
 function renderDailyBreakdown(){
   const days = getDailyBreakdown();
   const totals = days.reduce((a,d)=>({
-    qty:a.qty+d.qty, remitted:a.remitted+d.remitted, profit:a.profit+d.profit, tithes:a.tithes+d.tithes, takeHome:a.takeHome+d.takeHome
-  }), {qty:0, remitted:0, profit:0, tithes:0, takeHome:0});
+    qty:a.qty+d.qty, remitted:a.remitted+d.remitted, profit:a.profit+d.profit, tithes:a.tithes+d.tithes, takeHome:a.takeHome+d.takeHome, trucking:a.trucking+d.trucking, pendingAmount:a.pendingAmount+d.pendingAmount
+  }), {qty:0, remitted:0, profit:0, tithes:0, takeHome:0, trucking:0, pendingAmount:0});
   document.getElementById('bdRemitted').textContent = fmtMoney(totals.remitted);
   document.getElementById('bdProfit').textContent = fmtMoney(totals.profit);
   document.getElementById('bdTithes').textContent = fmtMoney(totals.tithes);
   document.getElementById('bdTakeHome').textContent = fmtMoney(totals.takeHome);
+  document.getElementById('bdTrucking').textContent = fmtMoney(totals.trucking);
   document.getElementById('bdQty').textContent = totals.qty + ' sacks';
+  document.getElementById('bdPendingAmount').textContent = fmtMoney(totals.pendingAmount);
 }
 
 /* =========================================================
    RESTOCK PAGE
 ========================================================= */
 function renderRestockPage(){
-  fillTypeSelect(document.getElementById('rsType'));
+  fillTypeSelect(document.getElementById('rsType'), false, true);
   styleRsTypeOptions();
   document.getElementById('rsDate').value = todayISO();
+  const rsFilterDateEl = document.getElementById('rsFilterDate');
+  if(rsFilterDateEl && !rsFilterDateEl.value) rsFilterDateEl.value = todayISO();
   updateRestockBagSize();
   renderAvailableStock();
   renderRestockTable();
@@ -1661,6 +2185,12 @@ function renderAvailableStock(){
   const grid = document.getElementById('stockAvailGrid');
   const dlBtn = document.getElementById('downloadStockBtn');
   const inStock = DB.types.filter(t=>t.stock > 0);
+  const totalBadge = document.getElementById('stockAvailTotalBadge');
+  if(totalBadge){
+    const totalSacks = DB.types.reduce((sum,t)=> sum + (t.stock||0), 0);
+    totalBadge.textContent = totalSacks;
+    totalBadge.title = `${inStock.length} rice type${inStock.length===1?'':'s'} in stock · ${totalSacks} sack${totalSacks===1?'':'s'} total`;
+  }
   if(inStock.length===0){
     if(dlBtn) dlBtn.style.display = 'none';
     grid.innerHTML = `<div class="stock-avail-empty">No sacks in stock right now. Add stock using the form above.</div>`;
@@ -1726,18 +2256,44 @@ function renderAvailableStock(){
       if(isNaN(newSellingPrice) || newSellingPrice < 0){ toast('Enter a valid selling price.', 'danger'); return; }
       const type = DB.types.find(x=>x.id===id);
       if(type){
+        const oldStock = type.stock || 0;
+        const delta = val - oldStock;
         type.stock = val;
         const costPrice = type.costPrice ?? 950;
         // Selling price changes only affect profit/sack; cost price stays fixed.
         type.profit = Math.max(0, +(newSellingPrice - costPrice).toFixed(2));
         type.sellingPrice = costPrice + type.profit;
         await dbUpdateProduct(type);
+
+        // Keep the Restock List in sync: reflect the stock change as an
+        // adjustment to today's record for this rice type & bag size,
+        // the same way the Add Stock form accumulates same-day deliveries.
+        if(delta !== 0){
+          const date = todayISO();
+          const chosenBagSize = type.bagSize || '25kg';
+          const existing = DB.tx.find(t=> t.kind==='restock' && t.date===date && t.typeId===type.id && (t.bagSize || chosenBagSize) === chosenBagSize);
+          if(existing){
+            existing.qty += delta;
+            if(existing.qty === 0){
+              DB.tx = DB.tx.filter(x=>x.id!==existing.id);
+              await dbDeleteRestock(existing.id);
+            } else {
+              await dbUpdateRestock(existing);
+            }
+          } else {
+            const newRestock = { id:uid(), kind:'restock', date, ts:Date.now(), storeId:null, typeId:type.id, qty:delta, bagSize:chosenBagSize };
+            DB.tx.push(newRestock);
+            await dbInsertRestock(newRestock);
+          }
+        }
+
         toast('Stock & selling price updated.');
         if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
       }
       styleRsTypeOptions();
       updateRestockBagSize();
       renderAvailableStock();
+      renderRestockTable();
     });
   });
   grid.querySelectorAll('.sa-qty-input, .sa-price-input').forEach(input=>{
@@ -2047,14 +2603,26 @@ document.getElementById('restockForm').addEventListener('submit', async (e)=>{
     bagSizeChanged = true;
   }
 
-  const newRestock = { id:uid(), kind:'restock', date, ts:Date.now(), storeId:null, typeId, qty };
-  DB.tx.push(newRestock);
+  // Only one record per rice type + bag size, per day. If one already exists for
+  // this date, add the new sacks into it instead of creating another row.
+  const existing = DB.tx.find(t=> t.kind==='restock' && t.date===date && t.typeId===typeId && (t.bagSize || typeInfo(typeId).bagSize || '25kg') === chosenBagSize);
   type.stock += qty;
-  await Promise.all([
-    dbInsertRestock(newRestock),
-    bagSizeChanged ? dbUpdateProduct(type) : dbUpdateProductStock(type.id, type.stock),
-  ]);
-  toast(bagSizeChanged ? 'Stock added, bag size and pricing updated.' : 'Stock added successfully.');
+  if(existing){
+    existing.qty += qty;
+    await Promise.all([
+      dbUpdateRestock(existing),
+      bagSizeChanged ? dbUpdateProduct(type) : dbUpdateProductStock(type.id, type.stock),
+    ]);
+    toast(bagSizeChanged ? 'Stock added to today\'s record; bag size and pricing updated.' : 'Stock added to today\'s existing record.');
+  } else {
+    const newRestock = { id:uid(), kind:'restock', date, ts:Date.now(), storeId:null, typeId, qty, bagSize:chosenBagSize };
+    DB.tx.push(newRestock);
+    await Promise.all([
+      dbInsertRestock(newRestock),
+      bagSizeChanged ? dbUpdateProduct(type) : dbUpdateProductStock(type.id, type.stock),
+    ]);
+    toast(bagSizeChanged ? 'Stock added, bag size and pricing updated.' : 'Stock added successfully.');
+  }
   document.getElementById('restockForm').reset();
   document.getElementById('rsDate').value = todayISO();
   updateRestockBagSize();
@@ -2070,27 +2638,39 @@ document.getElementById('rsResetBtn').addEventListener('click', ()=>{
   updateRestockBagSize();
 });
 
+function getFilteredRestocks(){
+  const day = document.getElementById('rsFilterDate').value;
+  return DB.tx.filter(t=>t.kind==='restock')
+    .filter(t=> !day || t.date===day)
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.ts||0)-(a.ts||0));
+}
 function renderRestockTable(){
-  const rows = DB.tx.filter(t=>t.kind==='restock').sort((a,b)=>b.ts-a.ts);
+  const rows = getFilteredRestocks();
   const body = document.getElementById('restockTableBody');
   const emptyEl = document.getElementById('restockEmpty');
   if(rows.length===0){
-    body.innerHTML=''; emptyEl.innerHTML = emptyStateHtml('No restocks yet', 'Add your first delivery using the form above.'); return;
+    body.innerHTML='';
+    const day = document.getElementById('rsFilterDate').value;
+    emptyEl.innerHTML = emptyStateHtml(
+      day ? 'No restock record for this day' : 'No restocks yet',
+      day ? 'Try a different day using the Day filter above.' : 'Add your first delivery using the form above.'
+    );
+    return;
   }
   emptyEl.innerHTML='';
   body.innerHTML = rows.map(t=>`
     <tr>
       <td>${fmtDate(t.date)}</td>
       <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
-      <td>${escapeHtml(typeInfo(t.typeId).bagSize || '25kg')}</td>
-      <td>${t.qty}</td>
+      <td>${escapeHtml(t.bagSize || typeInfo(t.typeId).bagSize || '25kg')}</td>
+      <td><span class="${t.qty<0 ? 'qty-neg' : 'qty-pos'}">${t.qty>0?'+':''}${t.qty}</span></td>
       <td><div class="row-actions">
         <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
       </div></td>
     </tr>`).join('');
   body.querySelectorAll('[data-del]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      confirmModal('Delete restock?', 'This will remove this delivery and subtract the sacks from stock.', async ()=>{
+      confirmModal('Delete restock?', 'This will remove this day\'s record and reverse its effect on stock.', async ()=>{
         const tx = DB.tx.find(x=>x.id===btn.dataset.del);
         if(tx){
           const type = DB.types.find(t=>t.id===tx.typeId);
@@ -2103,17 +2683,27 @@ function renderRestockTable(){
     });
   });
 }
+document.getElementById('rsFilterDate').addEventListener('change', renderRestockTable);
 
 /* =========================================================
    SACKS TYPE PAGE
 ========================================================= */
+let typeSearchQuery = '';
 function renderTypesPage(){
   const body = document.getElementById('typesTableBody');
+  const countBadge = document.getElementById('typesCount');
+  if(countBadge) countBadge.textContent = DB.types.length;
   if(DB.types.length===0){
     body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--ink-400);padding:24px;">No rice types added yet.</td></tr>`;
     return;
   }
-  body.innerHTML = DB.types.map(t=>{
+  const q = typeSearchQuery.trim().toLowerCase();
+  const rows = q ? DB.types.filter(t=>(t.name||'').toLowerCase().includes(q)) : DB.types;
+  if(rows.length===0){
+    body.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--ink-400);padding:24px;">No rice type matches "${escapeHtml(typeSearchQuery.trim())}".</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(t=>{
     const noStock = t.stock === 0;
     const low = !noStock && t.stock <= (DB.settings.lowStock||0);
     const costPrice = t.costPrice ?? 950;
@@ -2134,7 +2724,7 @@ function renderTypesPage(){
       <td>${fmtMoney(sellingPrice)}</td>
       <td>${statusBadge}</td>
       <td><div class="row-actions">
-        <button class="icon-btn" data-edit="${t.id}" ${t.stock>0?'disabled':''} title="${t.stock>0?'Cannot edit while stock is available. Set stock to 0 in Add/Restock first.':'Edit'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+        <button class="icon-btn" data-edit="${t.id}" title="Edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
         <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
       </div></td>
     </tr>`;
@@ -2142,7 +2732,6 @@ function renderTypesPage(){
   body.querySelectorAll('[data-edit]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const t = DB.types.find(x=>x.id===btn.dataset.edit);
-      if(t.stock > 0){ toast('Cannot edit this product while it still has stock. Set stock to 0 in Add/Restock first.', 'danger'); return; }
       document.getElementById('typeName').value = t.name;
       document.getElementById('typeBagSize').value = t.bagSize || '25kg';
       document.getElementById('typeCostPrice').value = t.costPrice ?? 950;
@@ -2154,6 +2743,16 @@ function renderTypesPage(){
       document.getElementById('typeEditId').value = t.id;
       document.getElementById('typeFormTitle').textContent = 'Edit Product';
       document.getElementById('typeSubmitBtn').textContent = 'Save Changes';
+      const bagSizeSelect = document.getElementById('typeBagSize');
+      const bagSizeField = bagSizeSelect.closest('.field');
+      if(t.stock > 0){
+        bagSizeSelect.disabled = true;
+        if(bagSizeField) bagSizeField.title = 'Bag size cannot be changed while stock is available.';
+        toast('This product still has stock, so bag size is locked. Other details can still be edited.');
+      } else {
+        bagSizeSelect.disabled = false;
+        if(bagSizeField) bagSizeField.removeAttribute('title');
+      }
       document.querySelector('#page-types').scrollIntoView({behavior:'smooth'});
     });
   });
@@ -2173,7 +2772,7 @@ function renderTypesPage(){
 document.getElementById('typeForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const name = toProperCase(document.getElementById('typeName').value.trim());
-  const bagSize = document.getElementById('typeBagSize').value;
+  const bagSizeInput = document.getElementById('typeBagSize').value;
   const costPrice = parseFloat(document.getElementById('typeCostPrice').value) || 0;
   const profit = parseFloat(document.getElementById('typeProfit').value) || 0;
   const sellingPrice = costPrice + profit;
@@ -2182,12 +2781,14 @@ document.getElementById('typeForm').addEventListener('submit', async (e)=>{
 
   if(editId){
     const t = DB.types.find(x=>x.id===editId);
+    // Bag size can't be changed while stock is available - keep the existing value in that case.
+    const bagSize = t.stock > 0 ? (t.bagSize || '25kg') : bagSizeInput;
     t.name=name; t.bagSize=bagSize; t.costPrice=costPrice; t.profit=profit; t.sellingPrice=sellingPrice;
     if(pendingTypePhoto !== undefined) t.photo = pendingTypePhoto;
     await dbUpdateProduct(t);
     toast('Sack type updated.');
   }else{
-    const t = {id:uid(), name, bagSize, costPrice, profit, sellingPrice, stock:0, photo: pendingTypePhoto || ''};
+    const t = {id:uid(), name, bagSize:bagSizeInput, costPrice, profit, sellingPrice, stock:0, photo: pendingTypePhoto || ''};
     DB.types.push(t);
     await dbInsertProduct(t);
     toast('Sack type added.');
@@ -2206,8 +2807,15 @@ function resetTypeForm(){
   pendingTypePhoto = undefined;
   renderTypePhotoPreview('', '');
   updateSellingPricePreview();
+  const bagSizeSelect = document.getElementById('typeBagSize');
+  bagSizeSelect.disabled = false;
+  bagSizeSelect.removeAttribute('title');
 }
 document.getElementById('typeResetBtn').addEventListener('click', resetTypeForm);
+document.getElementById('typeSearchInput').addEventListener('input', (e)=>{
+  typeSearchQuery = e.target.value;
+  renderTypesPage();
+});
 
 /* ---------- Rice type photo (100x100 square) ---------- */
 let pendingTypePhoto = undefined; // undefined = no change, '' = removed, dataURL = new photo
@@ -2400,23 +3008,118 @@ function computeSummary(from, to){
   const restocks = DB.tx.filter(t=>t.kind==='restock' && inRange(t));
 
   document.getElementById('sumSacks').textContent = sales.reduce((a,t)=>a+t.qty,0);
-  document.getElementById('sumRevenue').textContent = fmtMoney(sales.reduce((a,t)=>a+t.amount,0));
+  document.getElementById('sumRevenue').textContent = fmtMoney(sales.filter(isSalePaidLike).reduce((a,t)=>a+t.amount,0));
   document.getElementById('sumRestocked').textContent = restocks.reduce((a,t)=>a+t.qty,0);
   document.getElementById('sumCost').textContent = fmtMoney(restocks.reduce((a,t)=>a+(t.amount||0),0));
 
   const byType = {};
-  sales.forEach(t=>{ const k=t.typeId; byType[k]=byType[k]||{qty:0,rev:0}; byType[k].qty+=t.qty; byType[k].rev+=t.amount; });
+  sales.filter(isSalePaidLike).forEach(t=>{ const k=t.typeId; byType[k]=byType[k]||{qty:0,rev:0}; byType[k].qty+=t.qty; byType[k].rev+=t.amount; });
   const typeBody = document.getElementById('sumByType');
   const typeRows = Object.entries(byType).sort((a,b)=>b[1].qty-a[1].qty);
   typeBody.innerHTML = typeRows.length ? typeRows.map(([id,v])=>`<tr><td>${escapeHtml(typeInfo(id).name)}</td><td>${v.qty}</td><td>${fmtMoney(v.rev)}</td></tr>`).join('')
     : `<tr><td colspan="3" style="text-align:center;color:var(--ink-400);padding:18px;">No sales in range.</td></tr>`;
 
   const byStore = {};
-  sales.forEach(t=>{ const k=t.storeId; byStore[k]=byStore[k]||{qty:0,rev:0}; byStore[k].qty+=t.qty; byStore[k].rev+=t.amount; });
+  sales.filter(isSalePaidLike).forEach(t=>{ const k=t.storeId; byStore[k]=byStore[k]||{qty:0,rev:0}; byStore[k].qty+=t.qty; byStore[k].rev+=t.amount; });
   const storeBody = document.getElementById('sumByStore');
   const storeRows = Object.entries(byStore).sort((a,b)=>b[1].qty-a[1].qty);
   storeBody.innerHTML = storeRows.length ? storeRows.map(([id,v])=>`<tr><td>${escapeHtml(storeName(id))}</td><td>${v.qty}</td><td>${fmtMoney(v.rev)}</td></tr>`).join('')
     : `<tr><td colspan="3" style="text-align:center;color:var(--ink-400);padding:18px;">No sales in range.</td></tr>`;
+
+  renderMonthlyDayBreakdown();
+}
+
+/* ---------- Monthly (day-by-day) breakdown, Summary page ---------- */
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function populateSumMonthPicker(){
+  const picker = document.getElementById('sumMonthPicker');
+  if(!picker || picker.options.length) return; // populate once; month list never changes
+  const prevValue = picker.value;
+  picker.innerHTML = MONTH_NAMES.map((name,i)=>{
+    const v = String(i+1).padStart(2,'0');
+    return `<option value="${v}">${name}</option>`;
+  }).join('');
+  picker.value = prevValue || String(new Date().getMonth()+1).padStart(2,'0');
+}
+function populateSumYearPicker(){
+  const picker = document.getElementById('sumYearPicker');
+  if(!picker) return;
+  const years = new Set();
+  DB.tx.forEach(t=>{ if(t.date) years.add(t.date.slice(0,4)); });
+  const nowYear = String(new Date().getFullYear());
+  years.add(nowYear);
+  const sorted = Array.from(years).sort((a,b)=> b.localeCompare(a));
+  const prevValue = picker.value;
+  picker.innerHTML = sorted.map(y=>`<option value="${y}">${y}</option>`).join('');
+  picker.value = sorted.includes(prevValue) ? prevValue : (sorted.includes(nowYear) ? nowYear : sorted[0]);
+}
+document.getElementById('sumMonthPicker').addEventListener('change', renderMonthlyDayBreakdown);
+document.getElementById('sumYearPicker').addEventListener('change', renderMonthlyDayBreakdown);
+/* Shows every day (1 → last day) of the selected month/year, with Sacks Sold,
+   Total Gross, Net Profit, Sacks Restocked, Total Tithes, and Total Take Home
+   per day, plus a totals row for the whole month. Tithes = 10% of Net Profit;
+   Take Home = Net Profit minus Tithes (same rule used on the Sales page). */
+function renderMonthlyDayBreakdown(){
+  populateSumMonthPicker();
+  populateSumYearPicker();
+  const month = document.getElementById('sumMonthPicker').value;
+  const year = document.getElementById('sumYearPicker').value;
+  const monthKey = `${year}-${month}`;
+  const body = document.getElementById('sumPeriodBody');
+  const foot = document.getElementById('sumPeriodFoot');
+  const emptyEl = document.getElementById('sumPeriodEmpty');
+  emptyEl.innerHTML = '';
+
+  const totalDays = new Date(parseInt(year,10), parseInt(month,10), 0).getDate();
+  const byDay = {};
+  DB.tx.forEach(t=>{
+    if(!t.date || t.date.slice(0,7) !== monthKey) return;
+    if(t.kind!=='sale' && t.kind!=='restock') return;
+    const dayNum = parseInt(t.date.slice(8,10),10);
+    if(!byDay[dayNum]) byDay[dayNum] = {sacksSold:0, gross:0, profit:0, sacksRestocked:0};
+    const d = byDay[dayNum];
+    if(t.kind==='sale'){
+      d.sacksSold += t.qty;
+      if(isSalePaidLike(t)){
+        const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
+        const profit = ((t.price - costBasis) - (t.trucking||0)) * t.qty;
+        d.gross += t.amount;
+        d.profit += profit;
+      }
+    } else {
+      d.sacksRestocked += t.qty;
+    }
+  });
+
+  let tSacks=0, tGross=0, tProfit=0, tRestocked=0, tTithes=0, tTakeHome=0;
+  let html = '';
+  for(let day=1; day<=totalDays; day++){
+    const d = byDay[day] || {sacksSold:0, gross:0, profit:0, sacksRestocked:0};
+    const tithes = d.profit * 0.10;
+    const takeHome = d.profit - tithes;
+    tSacks += d.sacksSold; tGross += d.gross; tProfit += d.profit; tRestocked += d.sacksRestocked;
+    tTithes += tithes; tTakeHome += takeHome;
+    const dateStr = `${monthKey}-${String(day).padStart(2,'0')}`;
+    html += `<tr>
+      <td>${escapeHtml(fmtDateShort(dateStr))}</td>
+      <td>${d.sacksSold}</td>
+      <td class="cell-highlight">${fmtMoney(d.gross)}</td>
+      <td class="cell-highlight">${fmtMoney(d.profit)}</td>
+      <td>${d.sacksRestocked}</td>
+      <td>${fmtMoney(tithes)}</td>
+      <td>${fmtMoney(takeHome)}</td>
+    </tr>`;
+  }
+  body.innerHTML = html;
+  foot.innerHTML = `<tr class="totals-row">
+      <td>${escapeHtml(MONTH_NAMES[parseInt(month,10)-1])} ${escapeHtml(year)} Total</td>
+      <td>${tSacks}</td>
+      <td class="cell-highlight">${fmtMoney(tGross)}</td>
+      <td class="cell-highlight">${fmtMoney(tProfit)}</td>
+      <td>${tRestocked}</td>
+      <td>${fmtMoney(tTithes)}</td>
+      <td>${fmtMoney(tTakeHome)}</td>
+    </tr>`;
 }
 
 /* =========================================================
@@ -2430,6 +3133,7 @@ function renderReport(){
   runReport();
 }
 document.getElementById('repRunBtn').addEventListener('click', runReport);
+document.getElementById('repGroupBy').addEventListener('change', runReport);
 document.getElementById('repPrintBtn').addEventListener('click', ()=> window.print());
 document.getElementById('repCsvBtn').addEventListener('click', exportCsv);
 
@@ -2443,51 +3147,109 @@ function getReportRows(){
     .filter(t=> kindFilter==='all' || t.kind===kindFilter)
     .sort((a,b)=>b.ts-a.ts);
 }
+const REPORT_TX_HEAD = `<tr><th>Date</th><th>Type</th><th>Store</th><th>Sack Type</th><th>Sacks</th><th>Amount</th></tr>`;
 function runReport(){
   const rows = getReportRows();
   const from = document.getElementById('repFrom').value;
   const to = document.getElementById('repTo').value;
+  const groupBy = document.getElementById('repGroupBy').value;
   document.getElementById('repRangeLabel').textContent = (from||to) ? `${from?fmtDate(from):'…'} – ${to?fmtDate(to):'…'}` : 'All time';
 
   const sales = rows.filter(t=>t.kind==='sale');
   const restocks = rows.filter(t=>t.kind==='restock');
   document.getElementById('repCount').textContent = rows.length;
   document.getElementById('repSacksSold').textContent = sales.reduce((a,t)=>a+t.qty,0);
-  document.getElementById('repRevenue').textContent = fmtMoney(sales.reduce((a,t)=>a+t.amount,0));
+  document.getElementById('repRevenue').textContent = fmtMoney(sales.filter(isSalePaidLike).reduce((a,t)=>a+t.amount,0));
   document.getElementById('repCostVal').textContent = fmtMoney(restocks.reduce((a,t)=>a+(t.amount||0),0));
 
+  const head = document.getElementById('reportTableHead');
   const body = document.getElementById('reportTableBody');
+  const foot = document.getElementById('reportTableFoot');
   const emptyEl = document.getElementById('reportEmpty');
-  if(rows.length===0){
-    body.innerHTML=''; emptyEl.innerHTML = emptyStateHtml('No records in this range', 'Try a wider date range.'); return;
+
+  if(groupBy === 'none'){
+    head.innerHTML = REPORT_TX_HEAD;
+    foot.innerHTML = '';
+    if(rows.length===0){
+      body.innerHTML=''; emptyEl.innerHTML = emptyStateHtml('No records in this range', 'Try a wider date range.'); return;
+    }
+    emptyEl.innerHTML='';
+    body.innerHTML = rows.map(t=>`
+      <tr>
+        <td>${fmtDate(t.date)}</td>
+        <td><span class="badge ${t.kind==='sale'?'sale':'restock'}">${t.kind==='sale'?'SALE':'RESTOCK'}</span></td>
+        <td>${t.kind==='sale' ? escapeHtml(storeName(t.storeId)) : escapeHtml(t.supplier||'—')}</td>
+        <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
+        <td>${t.qty}</td>
+        <td>${fmtMoney(t.amount)}</td>
+      </tr>`).join('');
+    return;
+  }
+
+  // Grouped view (weekly / monthly / yearly)
+  const colHeadLabels = {weekly:'Week', monthly:'Month', yearly:'Year'};
+  head.innerHTML = `<tr><th>${colHeadLabels[groupBy]||'Period'}</th><th>Sacks Sold</th><th>Revenue</th><th>Net Profit</th><th>Sacks Restocked</th><th>Restock Cost</th></tr>`;
+  const periods = buildPeriodBreakdown(rows, groupBy);
+  if(periods.length===0){
+    body.innerHTML=''; foot.innerHTML=''; emptyEl.innerHTML = emptyStateHtml('No records in this range', 'Try a wider date range.'); return;
   }
   emptyEl.innerHTML='';
-  body.innerHTML = rows.map(t=>`
-    <tr>
-      <td>${fmtDate(t.date)}</td>
-      <td><span class="badge ${t.kind==='sale'?'sale':'restock'}">${t.kind==='sale'?'SALE':'RESTOCK'}</span></td>
-      <td>${t.kind==='sale' ? escapeHtml(storeName(t.storeId)) : escapeHtml(t.supplier||'—')}</td>
-      <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
-      <td>${t.qty}</td>
-      <td>${fmtMoney(t.amount)}</td>
-    </tr>`).join('');
+  let tSacks=0, tRevenue=0, tProfit=0, tRestocked=0, tCost=0;
+  body.innerHTML = periods.map(p=>{
+    tSacks+=p.sacksSold; tRevenue+=p.revenue; tProfit+=p.profit; tRestocked+=p.sacksRestocked; tCost+=p.restockCost;
+    return `<tr>
+      <td>${escapeHtml(p.label)}</td>
+      <td>${p.sacksSold}</td>
+      <td class="cell-highlight">${fmtMoney(p.revenue)}</td>
+      <td class="cell-highlight">${fmtMoney(p.profit)}</td>
+      <td>${p.sacksRestocked}</td>
+      <td>${fmtMoney(p.restockCost)}</td>
+    </tr>`;
+  }).join('');
+  foot.innerHTML = `<tr class="totals-row">
+      <td>Total (${periods.length} period${periods.length===1?'':'s'})</td>
+      <td>${tSacks}</td>
+      <td class="cell-highlight">${fmtMoney(tRevenue)}</td>
+      <td class="cell-highlight">${fmtMoney(tProfit)}</td>
+      <td>${tRestocked}</td>
+      <td>${fmtMoney(tCost)}</td>
+    </tr>`;
 }
 function exportCsv(){
   const rows = getReportRows();
   if(rows.length===0){ toast('Nothing to export in this range.', 'danger'); return; }
-  const header = ['Date','Type','Store/Supplier','Sack Type','Sacks','Amount'];
-  const lines = [header.join(',')];
-  rows.forEach(t=>{
-    const line = [
-      t.date,
-      t.kind==='sale'?'SALE':'RESTOCK',
-      `"${(t.kind==='sale'?storeName(t.storeId):(t.supplier||'')).replace(/"/g,'""')}"`,
-      `"${typeInfo(t.typeId).name.replace(/"/g,'""')}"`,
-      t.qty,
-      t.amount.toFixed(2)
-    ];
-    lines.push(line.join(','));
-  });
+  const groupBy = document.getElementById('repGroupBy').value;
+  let header, lines;
+  if(groupBy === 'none'){
+    header = ['Date','Type','Store/Supplier','Sack Type','Sacks','Amount'];
+    lines = [header.join(',')];
+    rows.forEach(t=>{
+      const line = [
+        t.date,
+        t.kind==='sale'?'SALE':'RESTOCK',
+        `"${(t.kind==='sale'?storeName(t.storeId):(t.supplier||'')).replace(/"/g,'""')}"`,
+        `"${typeInfo(t.typeId).name.replace(/"/g,'""')}"`,
+        t.qty,
+        t.amount.toFixed(2)
+      ];
+      lines.push(line.join(','));
+    });
+  } else {
+    const colHeadLabels = {weekly:'Week', monthly:'Month', yearly:'Year'};
+    header = [colHeadLabels[groupBy]||'Period','Sacks Sold','Revenue','Net Profit','Sacks Restocked','Restock Cost'];
+    lines = [header.join(',')];
+    buildPeriodBreakdown(rows, groupBy).forEach(p=>{
+      const line = [
+        `"${p.label.replace(/"/g,'""')}"`,
+        p.sacksSold,
+        p.revenue.toFixed(2),
+        p.profit.toFixed(2),
+        p.sacksRestocked,
+        p.restockCost.toFixed(2)
+      ];
+      lines.push(line.join(','));
+    });
+  }
   const blob = new Blob([lines.join('\n')], {type:'text/csv'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -2638,13 +3400,33 @@ document.getElementById('loadDataFile').addEventListener('change', (e)=>{
       try{
         const storeRows = parsed.stores.map(s=>({ id:s.id, name:s.name, contact:s.contact||null, phone:s.phone||null, color:s.color||null }));
         const productRows = parsed.types.map(t=>({ id:t.id, name:t.name, bag_size:t.bagSize||null, cost_price:t.costPrice||0, profit:t.profit||0, selling_price:t.sellingPrice||((t.costPrice||0)+(t.profit||0)), stock:t.stock||0, photo:t.photo||'' }));
-        const saleRows = parsed.tx.filter(t=>t.kind==='sale').map(t=>({ id:t.id, sale_date:t.date, ts:t.ts, store_id:t.storeId, product_id:t.typeId, qty:t.qty, price:t.price, cost_price:t.costPrice||0, amount:t.amount }));
-        const restockRows = parsed.tx.filter(t=>t.kind==='restock').map(t=>({ id:t.id, restock_date:t.date, ts:t.ts, product_id:t.typeId, qty:t.qty, cost:t.cost||null, amount:t.amount||null, supplier:t.supplier||null }));
+        const saleRows = parsed.tx.filter(t=>t.kind==='sale').map(t=>({ id:t.id, sale_date:t.date, ts:t.ts, store_id:t.storeId, product_id:t.typeId, qty:t.qty, price:t.price, cost_price:t.costPrice||0, amount:t.amount, trucking_expense:t.trucking||0 }));
+        const restockRows = parsed.tx.filter(t=>t.kind==='restock').map(t=>({ id:t.id, restock_date:t.date, ts:t.ts, product_id:t.typeId, qty:t.qty, cost:t.cost||null, amount:t.amount||null, supplier:t.supplier||null, bag_size:t.bagSize||null }));
 
         if(storeRows.length){ const {error} = await sb.from('stores').upsert(storeRows, {onConflict:'id'}); if(error) throw error; }
         if(productRows.length){ const {error} = await sb.from('products').upsert(productRows, {onConflict:'id'}); if(error) throw error; }
-        if(saleRows.length){ const {error} = await sb.from('sales').upsert(saleRows, {onConflict:'id'}); if(error) throw error; }
-        if(restockRows.length){ const {error} = await sb.from('restocks').upsert(restockRows, {onConflict:'id'}); if(error) throw error; }
+        if(saleRows.length){
+          const {error} = await sb.from('sales').upsert(saleRows, {onConflict:'id'});
+          if(error){
+            if(isMissingTruckingColumnError(error)){
+              const strippedRows = saleRows.map(({trucking_expense, ...rest})=>rest);
+              const retry = await sb.from('sales').upsert(strippedRows, {onConflict:'id'});
+              if(retry.error) throw retry.error;
+              warnMissingTruckingColumnOnce();
+            } else { throw error; }
+          }
+        }
+        if(restockRows.length){
+          const {error} = await sb.from('restocks').upsert(restockRows, {onConflict:'id'});
+          if(error){
+            if(isMissingBagSizeColumnError(error)){
+              const strippedRows = restockRows.map(({bag_size, ...rest})=>rest);
+              const retry = await sb.from('restocks').upsert(strippedRows, {onConflict:'id'});
+              if(retry.error) throw retry.error;
+              warnMissingBagSizeColumnOnce();
+            } else { throw error; }
+          }
+        }
 
         await loadDB();
         toast('Data loaded successfully.');
@@ -2737,7 +3519,13 @@ function emptyStateHtml(title, sub){
     loadSettingsForm();
     resetTypeForm();
     renderAdminProfile();
-    renderDashboard();
+    let restoredPage = null;
+    try{ restoredPage = sessionStorage.getItem('lastPage'); }catch(err){}
+    if(restoredPage && restoredPage !== 'dashboard' && pages.includes(restoredPage)){
+      goToPage(restoredPage);
+    }else{
+      renderDashboard();
+    }
     ['storeName','storeContact','typeName'].forEach(attachProperCase);
     resetIdleTimer();
   }catch(err){
