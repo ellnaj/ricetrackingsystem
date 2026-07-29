@@ -355,7 +355,7 @@ tfoot .totals-row td{font-weight:800; font-size:15.5px; background:#fdf1de; colo
 /* ===== Forms ===== */
 .form-card{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow-1); padding:22px; margin-bottom:20px;}
 .form-card h3{margin:0 0 4px; font-size:17px; color:var(--green-900);}
-.form-card .sub{margin:0 0 16px; color:var(--ink-600); font-size:13.5px;}
+.sub{margin:0 0 16px; color:var(--ink-600); font-size:13.5px; line-height:1.5;}
 .form-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px;}
 .field{display:flex; flex-direction:column; gap:6px;}
 .field-highlight{
@@ -502,7 +502,7 @@ footer.hint-strip{
 
     <ul class="nav-group" id="navGroup">
       <li><button class="nav-link" data-page="dashboard"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>Dashboard</button></li>
-      <li><button class="nav-link" data-page="sales"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Daily Sales</button></li>
+      <li><button class="nav-link" data-page="sales"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Daily Sales<span class="count-badge" id="salesPendingBadge" style="display:none; margin-left:auto; background:var(--gold-500); color:#3a2c0c;">0</span></button></li>
       <li><button class="nav-link" data-page="restock"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>Add / Restock</button></li>
       <li><button class="nav-link" data-page="types"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7l-8-4-8 4 8 4 8-4z"/><path d="M4 7v10l8 4 8-4V7"/></svg>Product List</button></li>
       <li><button class="nav-link" data-page="stores"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l2-6h14l2 6"/><path d="M4 9h16v11H4z"/><path d="M9 20v-6h6v6"/></svg>Buyer/Store</button></li>
@@ -551,6 +551,18 @@ footer.hint-strip{
 
       <!-- DASHBOARD -->
       <section class="page active" id="page-dashboard">
+        <div class="panel notif-panel" id="dashPendingPanel" style="display:none;">
+          <div class="panel-head">
+            <h3 style="display:flex; align-items:center; gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--gold-600);"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              Pending Status Alerts
+              <span class="count-badge" id="dashPendingCount">0</span>
+            </h3>
+            <button type="button" class="link-btn" data-page="sales">View in Daily Sales</button>
+          </div>
+          <p class="sub" style="margin:0 0 10px;">Sales that are Paid – Not Yet Picked Up or Reserved – Not Yet Paid. Click "Update Status" to process them.</p>
+          <ul class="notif-list" id="dashPendingList"></ul>
+        </div>
         <div class="stat-grid">
           <div class="card stat-card">
             <div class="stat-top">
@@ -899,24 +911,47 @@ footer.hint-strip{
         </div>
 
         <div class="panel">
-          <div class="panel-head">
-            <h3>Monthly Breakdown<span class="count-badge" id="sumActiveDaysCount">0</span></h3>
-            <input type="text" id="sumDaySearchInput" class="table-search" placeholder="Search day…">
+          <div class="panel-head"><h3>Breakdown</h3></div>
+          <div class="tab-bar">
+            <button type="button" class="tab-btn active" data-sum-tab="monthly">Monthly Breakdown</button>
+            <button type="button" class="tab-btn" data-sum-tab="yearly">Yearly Breakdown</button>
           </div>
-          <p class="sub" style="margin:-6px 0 4px;">Day-by-day totals for the selected month. Revenue and Net Profit only include Paid / Paid – Not Yet Picked Up sales. The badge above counts days with at least one transaction.</p>
-          <div class="filter-bar">
-            <div class="field" style="max-width:170px;"><label>Month</label><select id="sumMonthPicker"></select></div>
-            <div class="field" style="max-width:130px;"><label>Year</label><select id="sumYearPicker"></select></div>
-            <button class="chip active" type="button" id="sumActiveOnlyBtn">Showing Transaction Days Only</button>
+
+          <div class="tab-pane active" id="sumTab-monthly">
+            <div class="panel-head" style="margin-top:2px;">
+              <h3 style="font-size:15px;">Day-by-Day<span class="count-badge" id="sumActiveDaysCount">0</span></h3>
+              <input type="text" id="sumDaySearchInput" class="table-search" placeholder="Search day…">
+            </div>
+            <p class="sub" style="margin:-6px 0 4px;">Day-by-day totals for the selected month. Revenue and Net Profit only include Paid / Paid – Not Yet Picked Up sales. The badge above counts days with at least one transaction.</p>
+            <div class="filter-bar">
+              <div class="field" style="max-width:170px;"><label>Month</label><select id="sumMonthPicker"></select></div>
+              <div class="field" style="max-width:130px;"><label>Year</label><select id="sumYearPicker"></select></div>
+              <button class="chip active" type="button" id="sumActiveOnlyBtn">Showing Transaction Days Only</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Day</th><th>Sacks Sold</th><th>Total Gross</th><th>Net Profit</th><th>Sacks Restocked</th><th>Total Tithes</th><th>Total Take Home</th></tr></thead>
+                <tbody id="sumPeriodBody"></tbody>
+                <tfoot id="sumPeriodFoot"></tfoot>
+              </table>
+            </div>
+            <div id="sumPeriodEmpty"></div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Day</th><th>Sacks Sold</th><th>Total Gross</th><th>Net Profit</th><th>Sacks Restocked</th><th>Total Tithes</th><th>Total Take Home</th></tr></thead>
-              <tbody id="sumPeriodBody"></tbody>
-              <tfoot id="sumPeriodFoot"></tfoot>
-            </table>
+
+          <div class="tab-pane" id="sumTab-yearly">
+            <p class="sub" style="margin:2px 0 4px;">Month-by-month totals for the selected year, plus a total row for the whole year. Active Days counts days with at least one transaction. Total Gross and Net Profit only include Paid / Paid – Not Yet Picked Up sales.</p>
+            <div class="filter-bar">
+              <div class="field" style="max-width:130px;"><label>Year</label><select id="sumYearlyPicker"></select></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Month</th><th>Active Days</th><th>Sacks Sold</th><th>Total Gross</th><th>Net Profit</th><th>Sacks Restocked</th><th>Total Tithes</th><th>Total Take Home</th></tr></thead>
+                <tbody id="sumYearlyBody"></tbody>
+                <tfoot id="sumYearlyFoot"></tfoot>
+              </table>
+            </div>
+            <div id="sumYearlyEmpty"></div>
           </div>
-          <div id="sumPeriodEmpty"></div>
         </div>
       </section>
 
@@ -1642,6 +1677,7 @@ function renderDashboard(){
   renderTopStores();
   renderTopRice();
   renderRecentTx();
+  renderDashboardPendingAlerts();
 }
 
 function renderTopStores(){
@@ -1919,43 +1955,26 @@ function getFilteredSales(){
     .filter(t=> !to || t.date<=to)
     .sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.ts||0)-(a.ts||0));
 }
-/* ---------- Pending status notifications (Paid - Not Yet Picked Up / Reserved - Not Yet Paid) ---------- */
-let salesNotifCollapsed = false;
-function renderSalesNotifications(){
-  const panel = document.getElementById('salesNotifPanel');
-  const countBadge = document.getElementById('salesNotifCount');
-  const list = document.getElementById('salesNotifList');
-  const sub = document.getElementById('salesNotifSub');
-  const toggleBtn = document.getElementById('salesNotifToggle');
-  const pending = DB.tx.filter(t=> t.kind==='sale' && (t.status==='pickup' || t.status==='reserve'))
+/* ---------- Pending status notifications (Paid - Not Yet Picked Up / Reserved - Not Yet Paid) ----------
+   These sales stay "pending" — and keep showing up here, on the Dashboard, and as a badge on the
+   Daily Sales sidebar link — until their status is changed to Paid. */
+function getPendingSales(){
+  return DB.tx.filter(t=> t.kind==='sale' && (t.status==='pickup' || t.status==='reserve'))
     .sort((a,b)=> (b.ts||0)-(a.ts||0));
-
-  if(pending.length===0){
-    panel.style.display = 'none';
-    list.innerHTML = '';
-    countBadge.textContent = '0';
-    return;
-  }
-
-  panel.style.display = '';
-  countBadge.textContent = pending.length;
-  toggleBtn.textContent = salesNotifCollapsed ? 'Show' : 'Hide';
-  list.style.display = salesNotifCollapsed ? 'none' : '';
-  sub.style.display = salesNotifCollapsed ? 'none' : '';
-
-  list.innerHTML = pending.map(t=>{
-    const meta = SALE_STATUS_META[t.status] || SALE_STATUS_META.paid;
-    return `<li class="notif-item ${meta.cls}" data-notif-tx="${t.id}">
-      <span class="dot"></span>
-      <div class="notif-body">
-        <strong>${escapeHtml(storeName(t.storeId))}</strong> — ${escapeHtml(typeInfo(t.typeId).name)} · ${t.qty} sack${t.qty===1?'':'s'} · ${fmtMoney(t.amount)}
-        <div class="notif-sub">${meta.label} · ${fmtDate(t.date)}</div>
-      </div>
-      <button type="button" class="btn btn-ghost btn-sm" data-resolve-tx="${t.id}">Update Status</button>
-    </li>`;
-  }).join('');
-
-  list.querySelectorAll('[data-resolve-tx]').forEach(btn=>{
+}
+function pendingItemHtml(t){
+  const meta = SALE_STATUS_META[t.status] || SALE_STATUS_META.paid;
+  return `<li class="notif-item ${meta.cls}" data-notif-tx="${t.id}">
+    <span class="dot"></span>
+    <div class="notif-body">
+      <strong>${escapeHtml(storeName(t.storeId))}</strong> — ${escapeHtml(typeInfo(t.typeId).name)} · ${t.qty} sack${t.qty===1?'':'s'} · ${fmtMoney(t.amount)}
+      <div class="notif-sub">${meta.label} · ${fmtDate(t.date)}</div>
+    </div>
+    <button type="button" class="btn btn-ghost btn-sm" data-resolve-tx="${t.id}">Update Status</button>
+  </li>`;
+}
+function attachPendingResolveHandlers(container){
+  container.querySelectorAll('[data-resolve-tx]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const tx = DB.tx.find(x=>x.id===btn.dataset.resolveTx);
       if(!tx) return;
@@ -1965,9 +1984,64 @@ function renderSalesNotifications(){
         toast('Sale status updated.');
         renderSalesTable();
         renderDailyBreakdown();
+        renderDashboardPendingAlerts();
       });
     });
   });
+}
+function renderSidebarPendingBadge(){
+  const badge = document.getElementById('salesPendingBadge');
+  if(!badge) return;
+  const count = getPendingSales().length;
+  if(count > 0){
+    badge.textContent = count;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+function renderDashboardPendingAlerts(){
+  const panel = document.getElementById('dashPendingPanel');
+  if(!panel) return;
+  const countBadge = document.getElementById('dashPendingCount');
+  const list = document.getElementById('dashPendingList');
+  const pending = getPendingSales();
+  if(pending.length===0){
+    panel.style.display = 'none';
+    list.innerHTML = '';
+    countBadge.textContent = '0';
+  } else {
+    panel.style.display = '';
+    countBadge.textContent = pending.length;
+    list.innerHTML = pending.map(pendingItemHtml).join('');
+    attachPendingResolveHandlers(list);
+  }
+  renderSidebarPendingBadge();
+}
+let salesNotifCollapsed = false;
+function renderSalesNotifications(){
+  const panel = document.getElementById('salesNotifPanel');
+  const countBadge = document.getElementById('salesNotifCount');
+  const list = document.getElementById('salesNotifList');
+  const sub = document.getElementById('salesNotifSub');
+  const toggleBtn = document.getElementById('salesNotifToggle');
+  const pending = getPendingSales();
+
+  if(pending.length===0){
+    panel.style.display = 'none';
+    list.innerHTML = '';
+    countBadge.textContent = '0';
+  } else {
+    panel.style.display = '';
+    countBadge.textContent = pending.length;
+    toggleBtn.textContent = salesNotifCollapsed ? 'Show' : 'Hide';
+    list.style.display = salesNotifCollapsed ? 'none' : '';
+    sub.style.display = salesNotifCollapsed ? 'none' : '';
+    list.innerHTML = pending.map(pendingItemHtml).join('');
+    attachPendingResolveHandlers(list);
+  }
+
+  renderDashboardPendingAlerts();
 }
 document.getElementById('salesNotifToggle').addEventListener('click', ()=>{
   salesNotifCollapsed = !salesNotifCollapsed;
@@ -3262,6 +3336,7 @@ function computeSummary(from, to){
     : `<tr><td colspan="3" style="text-align:center;color:var(--ink-400);padding:18px;">No sales in range.</td></tr>`;
 
   renderMonthlyDayBreakdown();
+  renderYearlyBreakdown();
 }
 
 /* ---------- Monthly (day-by-day) breakdown, Summary page ---------- */
@@ -3375,6 +3450,101 @@ function renderMonthlyDayBreakdown(){
   }
   foot.innerHTML = `<tr class="totals-row">
       <td>${escapeHtml(MONTH_NAMES[parseInt(month,10)-1])} ${escapeHtml(year)} Total</td>
+      <td>${tSacks}</td>
+      <td class="cell-highlight">${fmtMoney(tGross)}</td>
+      <td class="cell-highlight">${fmtMoney(tProfit)}</td>
+      <td>${tRestocked}</td>
+      <td>${fmtMoney(tTithes)}</td>
+      <td>${fmtMoney(tTakeHome)}</td>
+    </tr>`;
+}
+
+/* ---------- Breakdown tabs (Monthly / Yearly), Summary page ---------- */
+document.querySelectorAll('[data-sum-tab]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-sum-tab]').forEach(b=>b.classList.toggle('active', b===btn));
+    const target = btn.dataset.sumTab;
+    document.getElementById('sumTab-monthly').classList.toggle('active', target==='monthly');
+    document.getElementById('sumTab-yearly').classList.toggle('active', target==='yearly');
+    if(target==='yearly') renderYearlyBreakdown();
+  });
+});
+
+/* ---------- Yearly breakdown (whole year, month-by-month), Summary page ---------- */
+function populateSumYearlyPicker(){
+  const picker = document.getElementById('sumYearlyPicker');
+  if(!picker) return;
+  const years = new Set();
+  DB.tx.forEach(t=>{ if(t.date) years.add(t.date.slice(0,4)); });
+  const nowYear = String(new Date().getFullYear());
+  years.add(nowYear);
+  const sorted = Array.from(years).sort((a,b)=> b.localeCompare(a));
+  const prevValue = picker.value;
+  picker.innerHTML = sorted.map(y=>`<option value="${y}">${y}</option>`).join('');
+  picker.value = sorted.includes(prevValue) ? prevValue : (sorted.includes(nowYear) ? nowYear : sorted[0]);
+}
+document.getElementById('sumYearlyPicker').addEventListener('change', renderYearlyBreakdown);
+/* Shows every month (Jan → Dec) of the selected year, with Sacks Sold, Total Gross,
+   Net Profit, Sacks Restocked, Total Tithes, and Total Take Home per month, plus a
+   totals row for the whole year. Same Paid / Paid – Not Yet Picked Up rule as elsewhere. */
+function renderYearlyBreakdown(){
+  populateSumYearlyPicker();
+  const year = document.getElementById('sumYearlyPicker').value;
+  const body = document.getElementById('sumYearlyBody');
+  const foot = document.getElementById('sumYearlyFoot');
+  const emptyEl = document.getElementById('sumYearlyEmpty');
+  emptyEl.innerHTML = '';
+
+  const byMonth = {};
+  DB.tx.forEach(t=>{
+    if(!t.date || t.date.slice(0,4) !== year) return;
+    if(t.kind!=='sale' && t.kind!=='restock') return;
+    const monthNum = parseInt(t.date.slice(5,7),10);
+    if(!byMonth[monthNum]) byMonth[monthNum] = {sacksSold:0, gross:0, profit:0, sacksRestocked:0, activeDays:new Set()};
+    const m = byMonth[monthNum];
+    m.activeDays.add(t.date);
+    if(t.kind==='sale'){
+      m.sacksSold += t.qty;
+      if(isSalePaidLike(t)){
+        const costBasis = t.costPrice ?? (typeInfo(t.typeId).costPrice ?? 950);
+        const profit = ((t.price - costBasis) - (t.trucking||0)) * t.qty;
+        m.gross += t.amount;
+        m.profit += profit;
+      }
+    } else {
+      m.sacksRestocked += t.qty;
+    }
+  });
+
+  let tSacks=0, tGross=0, tProfit=0, tRestocked=0, tTithes=0, tTakeHome=0, tActiveDays=0;
+  let html = '';
+  for(let month=1; month<=12; month++){
+    const m = byMonth[month] || {sacksSold:0, gross:0, profit:0, sacksRestocked:0, activeDays:new Set()};
+    const activeDays = m.activeDays.size;
+    const tithes = m.profit * 0.10;
+    const takeHome = m.profit - tithes;
+    tSacks += m.sacksSold; tGross += m.gross; tProfit += m.profit; tRestocked += m.sacksRestocked;
+    tTithes += tithes; tTakeHome += takeHome; tActiveDays += activeDays;
+    html += `<tr>
+      <td>${MONTH_NAMES[month-1]}</td>
+      <td>${activeDays}</td>
+      <td>${m.sacksSold}</td>
+      <td class="cell-highlight">${fmtMoney(m.gross)}</td>
+      <td class="cell-highlight">${fmtMoney(m.profit)}</td>
+      <td>${m.sacksRestocked}</td>
+      <td>${fmtMoney(tithes)}</td>
+      <td>${fmtMoney(takeHome)}</td>
+    </tr>`;
+  }
+  if(!html){
+    body.innerHTML = '';
+    emptyEl.innerHTML = emptyStateHtml('No records', 'No sales or restocks found for this year.');
+  } else {
+    body.innerHTML = html;
+  }
+  foot.innerHTML = `<tr class="totals-row">
+      <td>${escapeHtml(year)} Total</td>
+      <td>${tActiveDays}</td>
       <td>${tSacks}</td>
       <td class="cell-highlight">${fmtMoney(tGross)}</td>
       <td class="cell-highlight">${fmtMoney(tProfit)}</td>
@@ -3830,6 +4000,7 @@ function emptyStateHtml(title, sub){
     loadSettingsForm();
     resetTypeForm();
     renderAdminProfile();
+    renderSidebarPendingBadge();
     let restoredPage = null;
     try{ restoredPage = sessionStorage.getItem('lastPage'); }catch(err){}
     if(restoredPage && restoredPage !== 'dashboard' && pages.includes(restoredPage)){
