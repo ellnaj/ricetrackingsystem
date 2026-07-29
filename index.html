@@ -451,8 +451,9 @@ footer.hint-strip{
 
 /* ===== Responsive ===== */
 @media (max-width:1080px){
-  .grid-2{grid-template-columns:1fr;}
+  .grid-2, .two-col{grid-template-columns:1fr;}
   .stat-grid{grid-template-columns:repeat(2,1fr);}
+  .content{padding:22px 24px 56px;}
 }
 @media (max-width:900px){
   .sidebar{transform:translateX(-100%);}
@@ -463,19 +464,107 @@ footer.hint-strip{
     display:none; position:fixed; inset:0; background:rgba(18,38,26,.4); z-index:55;
   }
   .sidebar-scrim.show{display:block;}
+  .topbar{padding:14px 18px;}
+  .small-cards{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  .stock-avail-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));}
 }
+
+/* ===== Mobile phones & narrow tablets ===== */
 @media (max-width:640px){
-  .stat-grid{grid-template-columns:1fr 1fr; gap:12px;}
-  .topbar{padding:14px 16px;}
+  /* --- Top bar --- */
+  .topbar{padding:14px 16px; gap:10px;}
+  .topbar-right{width:100%; justify-content:space-between;}
+  .pill{flex:1; justify-content:center; padding:8px 10px; font-size:12.5px;}
+  .admin-pill span{max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .content{padding:16px 16px 50px;}
   .page-title h1{font-size:20px;}
   .two-col{grid-template-columns:1fr;}
+  .stat-grid{grid-template-columns:1fr 1fr; gap:12px;}
+
+  /* --- Buttons: comfortable touch targets --- */
+  .btn{min-height:44px;}
+  .btn-sm{min-height:38px; padding:8px 14px;}
+  .icon-btn{width:36px; height:36px;}
+  .icon-btn svg{width:16px; height:16px;}
+  .row-actions{gap:8px;}
   .form-actions{flex-direction:column;}
   .form-actions .btn{width:100%;}
+
+  /* --- Forms: single column, no iOS zoom-on-focus --- */
+  .form-card{padding:18px;}
+  .form-grid{grid-template-columns:1fr;}
+  .filter-bar{flex-direction:column; align-items:stretch;}
+  .filter-bar .field{max-width:none !important; width:100%;}
+  .filter-bar .btn, .filter-bar .chip{width:100%;}
+  .field input, .field select, .table-search, select.range-select, .select-native{
+    font-size:16px; padding:11px 12px;
+  }
+  .table-search{width:100%;}
+
+  /* --- Tables: smooth momentum scroll, tighter cells --- */
+  .table-wrap{-webkit-overflow-scrolling:touch;}
+  table{font-size:13px;}
+  thead th, tbody td{padding:10px 12px;}
+
+  /* --- Dialogs become bottom sheets: easier thumb reach --- */
+  .modal-overlay{align-items:flex-end; padding:0;}
+  .modal-box{
+    max-width:100%; width:100%; border-radius:18px 18px 0 0;
+    max-height:90vh; overflow-y:auto; padding:20px 18px 22px;
+    animation:sheetup .22s ease;
+  }
+  .modal-actions{flex-direction:column-reverse; gap:8px;}
+  .modal-actions .btn{width:100%;}
+
+  /* --- Card grids stay usable, never crush content --- */
+  .stock-avail-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px;}
+  .small-cards{grid-template-columns:1fr 1fr;}
+  .panel, .form-card{padding:16px;}
+
+  /* --- Tabs & chips scroll horizontally instead of wrapping messily --- */
+  .tab-bar{overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap;}
+  .tab-btn{flex-shrink:0; white-space:nowrap;}
+  .chip-row{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px;}
+  .chip{flex-shrink:0; white-space:nowrap;}
+
+  .dash-range-bar{justify-content:flex-start;}
+  .apply-pricing-bar{flex-direction:column; align-items:stretch;}
+  .apply-pricing-actions{width:100%;}
+  .apply-pricing-actions .btn{flex:1;}
 }
+@keyframes sheetup{from{opacity:0; transform:translateY(28px);} to{opacity:1; transform:none;}}
+
+/* ===== Small phones ===== */
 @media (max-width:420px){
   .stat-grid{grid-template-columns:1fr;}
+  .content{padding:14px 12px 46px;}
+  .page-title h1{font-size:18px;}
+  .brand-mark{width:88px; height:88px;}
+  .sidebar-brand{padding:20px 16px 14px;}
+  .small-cards{grid-template-columns:1fr;}
+  .stock-avail-grid{grid-template-columns:1fr 1fr;}
+  .modal-box{padding:18px 14px 20px;}
 }
+@media (max-width:360px){
+  .stock-avail-grid{grid-template-columns:1fr;}
+  .admin-pill span{max-width:64px;}
+}
+@media (max-width:420px){
+  #adminPhotoPreview{width:110px !important; height:110px !important; font-size:34px !important;}
+}
+
+/* ===== Touch devices of any size get bigger hit-targets ===== */
+@media (hover:none) and (pointer:coarse){
+  .icon-btn{min-width:36px; min-height:36px;}
+  .nav-link{padding:13px 14px;}
+  .chip{padding:9px 14px;}
+  .tab-btn{padding:12px 4px;}
+  .status-opt{padding:14px;}
+  .badge.clickable, .status-trigger-btn{min-height:34px;}
+}
+
+/* Consistent tap feedback, no accidental text selection on controls */
+button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:transparent; touch-action:manipulation;}
 </style>
 </head>
 <body>
