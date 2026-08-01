@@ -419,6 +419,9 @@ td.cell-highlight{background:#fdf1de; color:var(--gold-600); font-weight:800;}
 .tab-btn.active{color:var(--green-800); border-bottom:2.5px solid var(--gold-500);}
 .tab-pane{display:none;}
 .tab-pane.active{display:block;}
+#page-restock .tab-btn[data-rs-tab="backorder"]{color:var(--danger);}
+#page-restock .tab-btn[data-rs-tab="backorder"].active{color:var(--danger); border-bottom-color:var(--danger);}
+#rsTab-backorder{border-left:3px solid var(--danger); padding-left:14px; background:var(--danger-bg); border-radius:0 10px 10px 0; padding-top:12px; padding-bottom:4px; padding-right:4px;}
 .store-dot{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:7px; flex-shrink:0; box-shadow:0 0 0 2px rgba(255,255,255,.6);}
 .store-chip{display:inline-flex; align-items:center; padding:4px 10px 4px 8px; border-radius:999px; font-size:12.8px; font-weight:700; border:1px solid transparent; white-space:nowrap;}
 #saleStore{transition:border-color .15s ease;}
@@ -822,7 +825,7 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
       <!-- ADD / RESTOCK -->
       <section class="page" id="page-restock">
         <div class="form-card">
-          <h3>Add Stock / Restock</h3>
+          <h3>Add Stock / Back Order</h3>
           <p class="sub">Log new deliveries, or record sacks removed due to damage, a quality issue, or a wrong item.</p>
           <div class="tab-bar">
             <button type="button" class="tab-btn active" data-rs-tab="restock">Restock</button>
@@ -857,7 +860,7 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
               <div class="form-grid">
                 <div class="field"><label>Date</label><input type="date" id="boDate" required></div>
                 <div class="field"><label>Rice Type</label><select id="boType" required></select></div>
-                <div class="field field-highlight"><label>Qty to Deduct (Sacks) <span id="boQtyAvailLabel" style="font-weight:400; color:var(--ink-500);"></span></label><input type="number" min="1" id="boQty" required></div>
+                <div class="field field-highlight"><label>Qty to Deduct (Sacks)</label><input type="number" min="1" id="boQty" required></div>
                 <div class="field"><label>Reason</label>
                   <select id="boReason" required>
                     <option value="damaged">Damaged Sack</option>
@@ -867,7 +870,6 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
                   </select>
                 </div>
               </div>
-              <p class="sub" id="boStockHint" style="margin:2px 0 4px;"></p>
               <div class="form-actions">
                 <button type="submit" class="btn btn-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>Log Back Order</button>
                 <button type="button" class="btn btn-ghost" id="boResetBtn">Clear</button>
@@ -895,7 +897,7 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>Date</th><th>Rice Type</th><th>Bag Size</th><th>Qty</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Date</th><th>Rice Type</th><th>Bag Size</th><th>Qty</th></tr></thead>
               <tbody id="restockTableBody"></tbody>
             </table>
           </div>
@@ -2618,17 +2620,11 @@ document.getElementById('rsType').addEventListener('change', updateRestockBagSiz
 function updateBackorderStockHint(){
   const typeId = document.getElementById('boType').value;
   const type = DB.types.find(t=>t.id===typeId);
-  const hint = document.getElementById('boStockHint');
   const qtyInput = document.getElementById('boQty');
-  const availLabel = document.getElementById('boQtyAvailLabel');
-  if(availLabel) availLabel.textContent = type ? `(Available: ${type.stock} sack${type.stock===1?'':'s'})` : '';
   if(qtyInput){
-    if(type){ qtyInput.max = type.stock; qtyInput.placeholder = `Max ${type.stock}`; }
-    else { qtyInput.removeAttribute('max'); qtyInput.placeholder = ''; }
+    if(type){ qtyInput.max = type.stock; }
+    else { qtyInput.removeAttribute('max'); }
   }
-  if(!hint) return;
-  hint.textContent = type ? `Currently ${type.stock} sack${type.stock===1?'':'s'} of ${type.name} (${type.bagSize||'25kg'}) in stock.` : '';
-  hint.style.color = type && type.stock<=0 ? 'var(--danger)' : 'var(--ink-600)';
 }
 document.getElementById('boType').addEventListener('change', updateBackorderStockHint);
 function renderAvailableStock(){
@@ -3164,24 +3160,7 @@ function renderRestockTable(){
       <td>${escapeHtml(typeInfo(t.typeId).name)}</td>
       <td>${escapeHtml(t.bagSize || typeInfo(t.typeId).bagSize || '25kg')}</td>
       <td><span class="${t.qty<0 ? 'qty-neg' : 'qty-pos'}">${t.qty>0?'+':''}${t.qty}</span></td>
-      <td><div class="row-actions">
-        <button class="icon-btn danger" data-del="${t.id}" title="Delete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg></button>
-      </div></td>
     </tr>`).join('');
-  body.querySelectorAll('[data-del]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      confirmModal('Delete restock?', 'This will remove this day\'s record and reverse its effect on stock.', async ()=>{
-        const tx = DB.tx.find(x=>x.id===btn.dataset.del);
-        if(tx){
-          const type = DB.types.find(t=>t.id===tx.typeId);
-          if(type) type.stock = Math.max(0, type.stock - tx.qty);
-          DB.tx = DB.tx.filter(x=>x.id!==tx.id);
-          await Promise.all([ dbDeleteRestock(tx.id), type ? dbUpdateProductStock(type.id, type.stock) : Promise.resolve() ]);
-          toast('Restock deleted.'); styleRsTypeOptions(); renderAvailableStock(); renderRestockTable();
-        }
-      });
-    });
-  });
 }
 document.getElementById('rsFilterDate').addEventListener('change', renderRestockTable);
 
