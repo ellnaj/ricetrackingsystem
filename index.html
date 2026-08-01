@@ -191,15 +191,31 @@ select.range-select, .select-native{
   font-size:13px; color:var(--ink-900); cursor:pointer;
 }
 
-.notif-panel{border-left:4px solid var(--gold-500);}
-.notif-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
-.notif-item{display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--cream-100);}
-.notif-item .dot{width:10px; height:10px; border-radius:50%; flex-shrink:0;}
+.notif-panel{border-left:4px solid var(--gold-500); padding:14px 16px;}
+.notif-panel .panel-head{margin-bottom:8px;}
+.notif-head{cursor:pointer; user-select:none;}
+.notif-head:hover h3{color:var(--gold-700, var(--green-900));}
+.notif-chevron{width:16px; height:16px; margin-left:2px; flex-shrink:0; color:var(--ink-600); transition:transform .18s ease;}
+.notif-panel:not(.collapsed) .notif-chevron{transform:rotate(180deg);}
+.notif-panel.collapsed > .sub, .notif-panel.collapsed .notif-list{display:none;}
+.notif-panel > .sub{margin:0 0 8px; font-size:12.5px;}
+.notif-list{list-style:none; margin:0; padding:0 2px 0 0; display:flex; flex-direction:column; gap:5px; max-height:266px; overflow-y:auto;}
+.notif-list::-webkit-scrollbar{width:6px;}
+.notif-list::-webkit-scrollbar-track{background:transparent;}
+.notif-list::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+.notif-group-label{list-style:none; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-600); padding:4px 2px 0;}
+.notif-group-label:first-child{padding-top:0;}
+.notif-item{display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:9px; border:1px solid var(--line); background:#fff;}
+.notif-item.status-pickup{background:#fff; border-color:#f0dcb2;}
+.notif-item.status-reserve{background:#fff; border-color:#f0cec5;}
+.notif-item .dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
 .notif-item.status-pickup .dot{background:var(--gold-500);}
 .notif-item.status-reserve .dot{background:var(--danger);}
-.notif-item .notif-body{flex:1; font-size:13.5px; color:var(--ink-900);}
-.notif-item .notif-sub{font-size:12px; color:var(--ink-600); margin-top:2px;}
+.notif-item .notif-body{flex:1; font-size:12.5px; line-height:1.4; color:var(--ink-900); min-width:0;}
+.notif-item .notif-sub{font-size:11.5px; color:var(--ink-600); margin-left:6px;}
+.notif-item .notif-sub::before{content:"· "; }
 .notif-item .notif-body strong{color:var(--green-900);}
+.notif-item .btn-sm{padding:5px 10px; font-size:12px; flex-shrink:0;}
 
 .types-table .select-col{display:none; width:36px;}
 .types-table.select-mode .select-col{display:table-cell; text-align:center;}
@@ -644,18 +660,20 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
 
       <!-- DASHBOARD -->
       <section class="page active" id="page-dashboard">
-        <div class="panel notif-panel" id="dashPendingPanel" style="display:none;">
-          <div class="panel-head">
+        <div class="panel notif-panel collapsed" id="dashPendingPanel" style="display:none;">
+          <div class="panel-head notif-head" id="dashPendingHead">
             <h3 style="display:flex; align-items:center; gap:8px;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--gold-600);"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
               Pending Status Alerts
               <span class="count-badge" id="dashPendingCount">0</span>
+              <svg class="notif-chevron" id="dashPendingChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </h3>
-            <button type="button" class="link-btn" data-page="sales">View in Daily Sales</button>
+            <button type="button" class="link-btn" data-page="sales" id="dashPendingViewLink">View in Daily Sales</button>
           </div>
           <p class="sub" style="margin:0 0 10px;">Sales that are Paid – Not Yet Picked Up or Reserved – Not Yet Paid. Click "Update Status" to process them.</p>
           <ul class="notif-list" id="dashPendingList"></ul>
         </div>
+
         <div class="stat-grid">
           <div class="card stat-card">
             <div class="stat-top">
@@ -733,14 +751,14 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
 
       <!-- DAILY SALES -->
       <section class="page" id="page-sales">
-        <div class="panel notif-panel" id="salesNotifPanel" style="display:none;">
-          <div class="panel-head">
+        <div class="panel notif-panel collapsed" id="salesNotifPanel" style="display:none;">
+          <div class="panel-head notif-head" id="salesNotifHead">
             <h3 style="display:flex; align-items:center; gap:8px;">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;color:var(--gold-600);"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
               Pending Status Alerts
               <span class="count-badge" id="salesNotifCount">0</span>
+              <svg class="notif-chevron" id="salesNotifChevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
             </h3>
-            <button type="button" class="link-btn" id="salesNotifToggle">Hide</button>
           </div>
           <p class="sub" id="salesNotifSub" style="margin:0 0 10px;">Sales that are Paid – Not Yet Picked Up or Reserved – Not Yet Paid. Click "Update Status" to process them.</p>
           <ul class="notif-list" id="salesNotifList"></ul>
@@ -2196,11 +2214,24 @@ function pendingItemHtml(t){
   return `<li class="notif-item ${meta.cls}" data-notif-tx="${t.id}">
     <span class="dot"></span>
     <div class="notif-body">
-      <strong>${escapeHtml(storeName(t.storeId))}</strong> — ${escapeHtml(typeInfo(t.typeId).name)} · ${t.qty} sack${t.qty===1?'':'s'} · ${fmtMoney(t.amount)}
-      <div class="notif-sub">${meta.label} · ${fmtDate(t.date)}</div>
+      <strong>${escapeHtml(storeName(t.storeId))}</strong> — ${escapeHtml(typeInfo(t.typeId).name)} · ${t.qty} sack${t.qty===1?'':'s'} · ${fmtMoney(t.amount)}<span class="notif-sub">${fmtDate(t.date)}</span>
     </div>
-    <button type="button" class="btn btn-ghost btn-sm" data-resolve-tx="${t.id}">Update Status</button>
+    <button type="button" class="btn btn-ghost btn-sm" data-resolve-tx="${t.id}">Update</button>
   </li>`;
+}
+/* Groups pending items by status so the alert list reads as organized sections
+   (e.g. "Ready for Pickup", "Reserved – Not Yet Paid") instead of one long mixed list. */
+function pendingListHtml(pending){
+  const order = ['pickup','reserve'];
+  let html = '';
+  order.forEach(status=>{
+    const items = pending.filter(t=>t.status===status);
+    if(items.length===0) return;
+    const meta = SALE_STATUS_META[status] || {};
+    html += `<li class="notif-group-label">${escapeHtml(meta.label || status)} (${items.length})</li>`;
+    html += items.map(pendingItemHtml).join('');
+  });
+  return html;
 }
 function attachPendingResolveHandlers(container){
   container.querySelectorAll('[data-resolve-tx]').forEach(btn=>{
@@ -2242,18 +2273,19 @@ function renderDashboardPendingAlerts(){
   } else {
     panel.style.display = '';
     countBadge.textContent = pending.length;
-    list.innerHTML = pending.map(pendingItemHtml).join('');
+    list.innerHTML = pendingListHtml(pending);
     attachPendingResolveHandlers(list);
   }
   renderSidebarPendingBadge();
 }
-let salesNotifCollapsed = false;
+document.getElementById('dashPendingHead').addEventListener('click', (e)=>{
+  if(e.target.closest('#dashPendingViewLink')) return;
+  document.getElementById('dashPendingPanel').classList.toggle('collapsed');
+});
 function renderSalesNotifications(){
   const panel = document.getElementById('salesNotifPanel');
   const countBadge = document.getElementById('salesNotifCount');
   const list = document.getElementById('salesNotifList');
-  const sub = document.getElementById('salesNotifSub');
-  const toggleBtn = document.getElementById('salesNotifToggle');
   const pending = getPendingSales();
 
   if(pending.length===0){
@@ -2263,18 +2295,14 @@ function renderSalesNotifications(){
   } else {
     panel.style.display = '';
     countBadge.textContent = pending.length;
-    toggleBtn.textContent = salesNotifCollapsed ? 'Show' : 'Hide';
-    list.style.display = salesNotifCollapsed ? 'none' : '';
-    sub.style.display = salesNotifCollapsed ? 'none' : '';
-    list.innerHTML = pending.map(pendingItemHtml).join('');
+    list.innerHTML = pendingListHtml(pending);
     attachPendingResolveHandlers(list);
   }
 
   renderDashboardPendingAlerts();
 }
-document.getElementById('salesNotifToggle').addEventListener('click', ()=>{
-  salesNotifCollapsed = !salesNotifCollapsed;
-  renderSalesNotifications();
+document.getElementById('salesNotifHead').addEventListener('click', ()=>{
+  document.getElementById('salesNotifPanel').classList.toggle('collapsed');
 });
 
 function renderSalesTable(){
