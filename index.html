@@ -934,7 +934,6 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
             <div class="mini-stat"><div class="lbl">Resolved</div><div class="val" id="boStatResolved">0</div></div>
           </div>
           <div class="filter-bar">
-            <div class="field" style="max-width:170px;"><label>Day</label><input type="date" id="boFilterDate"></div>
             <div class="field" style="max-width:190px;"><label>Reason</label>
               <select id="boFilterReason">
                 <option value="all">All reasons</option>
@@ -2239,7 +2238,9 @@ function attachPendingResolveHandlers(container){
       const tx = DB.tx.find(x=>x.id===btn.dataset.resolveTx);
       if(!tx) return;
       openSaleStatusPopup(tx.status||'paid', async (newStatus)=>{
+        const wasReserve = (tx.status||'paid') === 'reserve';
         tx.status = newStatus;
+        if(wasReserve && newStatus !== 'reserve') tx.date = todayISO(); // reserve is finally paid/picked up today, not on the day it was reserved
         await dbUpdateSale(tx);
         toast('Sale status updated.');
         renderSalesTable();
@@ -2367,7 +2368,9 @@ function renderSalesTable(){
       const tx = DB.tx.find(x=>x.id===badge.dataset.statusTx);
       if(!tx) return;
       openSaleStatusPopup(tx.status||'paid', async (newStatus)=>{
+        const wasReserve = (tx.status||'paid') === 'reserve';
         tx.status = newStatus;
+        if(wasReserve && newStatus !== 'reserve') tx.date = todayISO(); // reserve is finally paid/picked up today, not on the day it was reserved
         await dbUpdateSale(tx);
         toast('Sale status updated.');
         renderSalesTable();
@@ -2472,6 +2475,7 @@ function openEditSaleModal(id){
       tx.costPrice = newCost; // per-sale only - the product's default cost price is untouched
       tx.trucking = newTrucking;
       tx.amount = newQty * newPrice; // Total Gross never includes trucking
+      if(tx.status === 'reserve' && newStatus !== 'reserve') tx.date = todayISO(); // reserve is finally paid/picked up today, not on the day it was reserved
       tx.status = newStatus;
 
       await Promise.all([ dbUpdateSale(tx), type ? dbUpdateProductStock(type.id, type.stock) : Promise.resolve() ]);
@@ -2573,7 +2577,6 @@ function renderRestockPage(){
 
   fillBackorderTypeSelect();
   document.getElementById('boDate').value = todayISO();
-  document.getElementById('boFilterDate').value = todayISO();
   updateBackorderStockHint();
   renderBackorderTable();
 }
@@ -3194,11 +3197,9 @@ document.getElementById('rsFilterDate').addEventListener('change', renderRestock
 
 /* ---------- Back Order List ---------- */
 function getFilteredBackorders(){
-  const day = document.getElementById('boFilterDate').value;
   const reasonFilter = document.getElementById('boFilterReason').value;
   const statusFilter = document.getElementById('boFilterStatus').value;
   return DB.tx.filter(t=>t.kind==='backorder')
-    .filter(t=> !day || t.date===day)
     .filter(t=> reasonFilter==='all' || t.reason===reasonFilter)
     .filter(t=> statusFilter==='all' || (t.status||'pending')===statusFilter)
     .sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.ts||0)-(a.ts||0));
@@ -3224,10 +3225,10 @@ function renderBackorderTable(){
 
   if(rows.length===0){
     body.innerHTML='';
-    const day = document.getElementById('boFilterDate').value;
+    const filtered = document.getElementById('boFilterReason').value!=='all' || document.getElementById('boFilterStatus').value!=='all';
     emptyEl.innerHTML = emptyStateHtml(
-      day ? 'No back orders for this day' : 'No back orders logged yet',
-      day ? 'Try a different day, or clear the filters above.' : 'Damaged sacks, quality issues, and wrong items you log will appear here.'
+      filtered ? 'No back orders match these filters' : 'No back orders logged yet',
+      filtered ? 'Try clearing the filters above.' : 'Damaged sacks, quality issues, and wrong items you log will appear here.'
     );
     return;
   }
@@ -3274,7 +3275,6 @@ function renderBackorderTable(){
     });
   });
 }
-document.getElementById('boFilterDate').addEventListener('change', renderBackorderTable);
 document.getElementById('boFilterReason').addEventListener('change', renderBackorderTable);
 document.getElementById('boFilterStatus').addEventListener('change', renderBackorderTable);
 
