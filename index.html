@@ -475,10 +475,14 @@ footer.hint-strip{
   display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
   margin-bottom:18px;
 }
-.price-list-toolbar .toolbar-left{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
-.price-sheet{
+.price-list-toolbar .toolbar-left{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+.price-page-label{
+  max-width:900px; margin:0 auto 8px; font-size:12px; font-weight:700; color:var(--ink-400);
+  text-transform:uppercase; letter-spacing:.04em;
+}
+.price-page{
   background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg);
-  box-shadow:var(--shadow-1); padding:32px; max-width:900px; margin:0 auto;
+  box-shadow:var(--shadow-1); padding:32px; max-width:900px; margin:0 auto 28px;
 }
 .price-sheet-header{
   display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
@@ -496,7 +500,7 @@ footer.hint-strip{
 }
 .price-sheet-header .sheet-meta strong{color:var(--ink-900); font-weight:700;}
 .price-list-grid{
-  display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;
+  display:grid; grid-template-columns:repeat(var(--pl-cols, 3), 1fr); gap:16px;
 }
 .price-card{
   border:1px solid var(--line); border-radius:var(--radius-md); padding:14px;
@@ -528,29 +532,33 @@ footer.hint-strip{
   color:var(--ink-400); font-size:11.5px; text-align:center;
 }
 @media (max-width:900px){
-  .price-list-grid{grid-template-columns:repeat(2, 1fr);}
-  .price-sheet{padding:22px;}
+  .price-list-grid{--pl-cols:2;}
+  .price-page{padding:22px;}
 }
 @media (max-width:520px){
-  .price-list-grid{grid-template-columns:1fr 1fr;}
+  .price-list-grid{--pl-cols:2;}
   .price-sheet-header{flex-direction:column;}
   .price-sheet-header .sheet-meta{text-align:left;}
 }
 @media print{
-  .price-sheet{border:none; box-shadow:none; padding:0; max-width:none;}
-  .price-list-grid{grid-template-columns:repeat(5, 1fr); gap:6px;}
-  .price-card{background:#fff; padding:5px; gap:3px;}
-  .price-card-photo{width:46px; height:46px; font-size:16px; border-radius:7px;}
-  .price-card-name{font-size:10px; margin-top:1px; line-height:1.15;}
-  .price-card-bag{font-size:7.5px; padding:1.5px 6px;}
-  .price-card-price{font-size:12px; margin-top:1px;}
-  .price-card-price small{font-size:7.5px;}
+  .price-page-label{display:none;}
+  .price-page{
+    border:none; box-shadow:none; padding:0; max-width:none; margin:0 auto;
+    page:pricelistpage; break-after:page; page-break-after:always; break-inside:avoid; page-break-inside:avoid;
+  }
+  .price-page:last-child{break-after:auto; page-break-after:auto;}
+  .price-card{background:#fff; padding:calc(5px * var(--pl-scale,1)); gap:calc(3px * var(--pl-scale,1));}
+  .price-card-photo{width:calc(46px * var(--pl-scale,1)); height:calc(46px * var(--pl-scale,1)); font-size:calc(16px * var(--pl-scale,1)); border-radius:7px;}
+  .price-card-name{font-size:calc(10px * var(--pl-scale,1)); margin-top:1px; line-height:1.15;}
+  .price-card-bag{font-size:calc(7.5px * var(--pl-scale,1)); padding:calc(1.5px * var(--pl-scale,1)) calc(6px * var(--pl-scale,1));}
+  .price-card-price{font-size:calc(12px * var(--pl-scale,1)); margin-top:1px;}
+  .price-card-price small{font-size:calc(7.5px * var(--pl-scale,1));}
   .price-sheet-header{padding-bottom:6px; margin-bottom:8px;}
   .price-sheet-header .biz-name{font-size:18px;}
   .price-sheet-header .biz-tagline{font-size:9.5px; margin-top:2px;}
   .price-sheet-header .sheet-meta{font-size:8.5px;}
   .price-sheet-footer{margin-top:8px; padding-top:5px; font-size:8px; break-before:avoid; page-break-before:avoid;}
-  .price-list-grid{break-after:avoid; page-break-after:avoid;}
+  .price-list-grid{gap:calc(6px * var(--pl-scale,1)); break-after:avoid; page-break-after:avoid;}
 }
 
 /* ===== Responsive ===== */
@@ -1126,10 +1134,29 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
         <div class="price-list-toolbar no-print">
           <div class="toolbar-left">
             <button type="button" class="btn btn-ghost btn-sm" data-page="types"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back to Product List</button>
+            <div class="field" style="margin:0;">
+              <label style="font-size:11.5px;">Paper Orientation</label>
+              <select id="pricelistOrientationSelect" class="select-native">
+                <option value="landscape" selected>Landscape</option>
+                <option value="portrait">Portrait</option>
+              </select>
+            </div>
+            <div class="field" style="margin:0;">
+              <label style="font-size:11.5px;">Products per Page</label>
+              <select id="pricelistPerPageSelect" class="select-native">
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="15">15</option>
+                <option value="20" selected>20</option>
+                <option value="24">24</option>
+                <option value="30">30</option>
+              </select>
+            </div>
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="pricelistPrintBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
         </div>
-        <div class="price-sheet" id="priceSheet"></div>
+        <div id="priceSheet"></div>
       </section>
 
       <!-- STORES -->
@@ -3573,6 +3600,13 @@ function renderTypesPage(){
 }
 
 /* ---------- Customer Price List ---------- */
+const PRICELIST_GRID_PRESETS = {
+  landscape:{ 8:{cols:4,rows:2}, 10:{cols:5,rows:2}, 12:{cols:4,rows:3}, 15:{cols:5,rows:3}, 20:{cols:5,rows:4}, 24:{cols:6,rows:4}, 30:{cols:6,rows:5} },
+  portrait:{ 8:{cols:2,rows:4}, 10:{cols:2,rows:5}, 12:{cols:3,rows:4}, 15:{cols:3,rows:5}, 20:{cols:4,rows:5}, 24:{cols:4,rows:6}, 30:{cols:5,rows:6} }
+};
+let pricelistOrientation = 'landscape';
+let pricelistPerPage = 20;
+
 function renderPriceListPage(){
   const sheet = document.getElementById('priceSheet');
   if(!sheet) return;
@@ -3586,40 +3620,68 @@ function renderPriceListPage(){
     return;
   }
 
-  const cards = list.map(t=>{
-    const costPrice = t.costPrice ?? 950;
-    const sellingPrice = t.sellingPrice ?? (costPrice + (t.profit||0));
-    const photoCell = t.photo
-      ? `<img src="${t.photo}" alt="${escapeHtml(t.name)}">`
-      : `${(t.name||'?').trim().charAt(0).toUpperCase()}`;
-    return `<div class="price-card">
-      <div class="price-card-photo">${photoCell}</div>
-      <div class="price-card-name">${escapeHtml(t.name)}</div>
-      ${t.bagSize ? `<div class="price-card-bag">${escapeHtml(t.bagSize)}</div>` : ''}
-      <div class="price-card-price">${fmtMoney(sellingPrice)}<small>per sack</small></div>
-    </div>`;
-  }).join('');
+  const perPage = pricelistPerPage;
+  const preset = (PRICELIST_GRID_PRESETS[pricelistOrientation] && PRICELIST_GRID_PRESETS[pricelistOrientation][perPage])
+    || {cols: Math.max(1, Math.ceil(Math.sqrt(perPage)))};
 
-  sheet.innerHTML = `
-    <div class="price-sheet-header">
-      <div>
-        <h2 class="biz-name">${escapeHtml(bizName)}</h2>
-        <p class="biz-tagline">Customer Price List</p>
-      </div>
-      <div class="sheet-meta">
-        <div>Date: <strong>${dateStr}</strong></div>
-        <div>${list.length} product${list.length===1?'':'s'}</div>
-      </div>
-    </div>
-    <div class="price-list-grid">${cards}</div>
-    <div class="price-sheet-footer">Prices are subject to change without prior notice. Thank you for your business!</div>
-  `;
+  const chunks = [];
+  for(let i=0;i<list.length;i+=perPage){ chunks.push(list.slice(i, i+perPage)); }
+  const totalPages = chunks.length;
+
+  sheet.innerHTML = chunks.map((chunk, idx)=>{
+    const rows = preset.rows || Math.ceil(chunk.length / preset.cols);
+    const baselineRows = pricelistOrientation==='landscape' ? 4 : 6;
+    const scale = rows > baselineRows ? +(baselineRows/rows).toFixed(3) : 1;
+    const cards = chunk.map(t=>{
+      const costPrice = t.costPrice ?? 950;
+      const sellingPrice = t.sellingPrice ?? (costPrice + (t.profit||0));
+      const photoCell = t.photo
+        ? `<img src="${t.photo}" alt="${escapeHtml(t.name)}">`
+        : `${(t.name||'?').trim().charAt(0).toUpperCase()}`;
+      return `<div class="price-card">
+        <div class="price-card-photo">${photoCell}</div>
+        <div class="price-card-name">${escapeHtml(t.name)}</div>
+        ${t.bagSize ? `<div class="price-card-bag">${escapeHtml(t.bagSize)}</div>` : ''}
+        <div class="price-card-price">${fmtMoney(sellingPrice)}<small>per sack</small></div>
+      </div>`;
+    }).join('');
+    return `
+      ${totalPages>1 ? `<div class="price-page-label">Page ${idx+1} of ${totalPages}</div>` : ''}
+      <div class="price-page">
+        <div class="price-sheet-header">
+          <div>
+            <h2 class="biz-name">${escapeHtml(bizName)}</h2>
+            <p class="biz-tagline">Customer Price List</p>
+          </div>
+          <div class="sheet-meta">
+            <div>Date: <strong>${dateStr}</strong></div>
+            <div>${list.length} product${list.length===1?'':'s'}${totalPages>1 ? ` &middot; Page ${idx+1}/${totalPages}` : ''}</div>
+          </div>
+        </div>
+        <div class="price-list-grid" style="--pl-cols:${preset.cols}; --pl-scale:${scale};">${cards}</div>
+        <div class="price-sheet-footer">Prices are subject to change without prior notice. Thank you for your business!</div>
+      </div>`;
+  }).join('');
 }
+
+document.getElementById('pricelistOrientationSelect').addEventListener('change', (e)=>{
+  pricelistOrientation = e.target.value;
+  renderPriceListPage();
+});
+document.getElementById('pricelistPerPageSelect').addEventListener('change', (e)=>{
+  pricelistPerPage = parseInt(e.target.value, 10) || 20;
+  renderPriceListPage();
+});
+
 document.getElementById('pricelistPrintBtn').addEventListener('click', ()=>{
   const styleTag = document.createElement('style');
   styleTag.id = 'pricelistPrintOrientation';
-  styleTag.textContent = '@page{size:A4 landscape; margin:10mm;}';
+  styleTag.textContent = `@page{size:A4 ${pricelistOrientation}; margin:10mm;} @page pricelistpage{size:A4 ${pricelistOrientation}; margin:10mm;}`;
   document.head.appendChild(styleTag);
+  // Force a synchronous style/layout flush so the injected rule is guaranteed
+  // to be in effect before the print snapshot is taken (avoids a timing race
+  // that could otherwise cause the print job to fall back to portrait).
+  void document.body.offsetHeight;
   const cleanup = ()=>{
     const tag = document.getElementById('pricelistPrintOrientation');
     if(tag) tag.remove();
