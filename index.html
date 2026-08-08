@@ -467,6 +467,90 @@ footer.hint-strip{
   .main{margin-left:0 !important;}
   body{background:#fff;}
   .content{padding:0;}
+  @page{size:A4; margin:12mm;}
+}
+
+/* ===== Customer Price List ===== */
+.price-list-toolbar{
+  display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  margin-bottom:18px;
+}
+.price-list-toolbar .toolbar-left{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.price-sheet{
+  background:#fff; border:1px solid var(--line); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-1); padding:32px; max-width:900px; margin:0 auto;
+}
+.price-sheet-header{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+  border-bottom:2px solid var(--green-700); padding-bottom:16px; margin-bottom:22px;
+  flex-wrap:wrap;
+}
+.price-sheet-header .biz-name{
+  font-family:'Fraunces',serif; font-weight:700; font-size:26px; color:var(--green-800); margin:0;
+}
+.price-sheet-header .biz-tagline{
+  margin:4px 0 0; color:var(--ink-600); font-size:13.5px;
+}
+.price-sheet-header .sheet-meta{
+  text-align:right; color:var(--ink-400); font-size:12.5px; line-height:1.6;
+}
+.price-sheet-header .sheet-meta strong{color:var(--ink-900); font-weight:700;}
+.price-list-grid{
+  display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;
+}
+.price-card{
+  border:1px solid var(--line); border-radius:var(--radius-md); padding:14px;
+  display:flex; flex-direction:column; align-items:center; text-align:center; gap:8px;
+  break-inside:avoid; page-break-inside:avoid; background:#fdfcf8;
+}
+.price-card-photo{
+  width:84px; height:84px; border-radius:10px; overflow:hidden; flex-shrink:0;
+  border:1px solid var(--line); background:var(--green-700); color:#fff;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:26px;
+}
+.price-card-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+.price-card-name{
+  font-family:'Fraunces',serif; font-weight:700; font-size:15.5px; color:var(--ink-900);
+  margin:2px 0 0; line-height:1.25;
+}
+.price-card-bag{
+  font-size:11.5px; font-weight:700; letter-spacing:.02em; text-transform:uppercase;
+  color:var(--gold-600); background:rgba(201,154,46,.14); border-radius:999px;
+  padding:3px 10px;
+}
+.price-card-price{
+  font-family:'Fraunces',serif; font-weight:700; font-size:20px; color:var(--green-800);
+  margin-top:2px;
+}
+.price-card-price small{font-size:11.5px; font-weight:600; color:var(--ink-400); display:block; font-family:'Inter',sans-serif;}
+.price-sheet-footer{
+  margin-top:26px; padding-top:14px; border-top:1px solid var(--line);
+  color:var(--ink-400); font-size:11.5px; text-align:center;
+}
+@media (max-width:900px){
+  .price-list-grid{grid-template-columns:repeat(2, 1fr);}
+  .price-sheet{padding:22px;}
+}
+@media (max-width:520px){
+  .price-list-grid{grid-template-columns:1fr 1fr;}
+  .price-sheet-header{flex-direction:column;}
+  .price-sheet-header .sheet-meta{text-align:left;}
+}
+@media print{
+  .price-sheet{border:none; box-shadow:none; padding:0; max-width:none;}
+  .price-list-grid{grid-template-columns:repeat(5, 1fr); gap:6px;}
+  .price-card{background:#fff; padding:5px; gap:3px;}
+  .price-card-photo{width:46px; height:46px; font-size:16px; border-radius:7px;}
+  .price-card-name{font-size:10px; margin-top:1px; line-height:1.15;}
+  .price-card-bag{font-size:7.5px; padding:1.5px 6px;}
+  .price-card-price{font-size:12px; margin-top:1px;}
+  .price-card-price small{font-size:7.5px;}
+  .price-sheet-header{padding-bottom:6px; margin-bottom:8px;}
+  .price-sheet-header .biz-name{font-size:18px;}
+  .price-sheet-header .biz-tagline{font-size:9.5px; margin-top:2px;}
+  .price-sheet-header .sheet-meta{font-size:8.5px;}
+  .price-sheet-footer{margin-top:8px; padding-top:5px; font-size:8px; break-before:avoid; page-break-before:avoid;}
+  .price-list-grid{break-after:avoid; page-break-after:avoid;}
 }
 
 /* ===== Responsive ===== */
@@ -1013,7 +1097,10 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
         <div class="panel">
           <div class="panel-head">
             <h3>Product List<span class="count-badge" id="typesCount">0</span></h3>
-            <input type="text" id="typeSearchInput" class="table-search" placeholder="Search rice name…">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-ghost btn-sm" data-page="pricelist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Customer Price List</button>
+              <input type="text" id="typeSearchInput" class="table-search" placeholder="Search rice name…">
+            </div>
           </div>
           <div class="apply-pricing-bar" id="applyPricingBar" style="display:none;">
             <div class="apply-pricing-info">
@@ -1032,6 +1119,17 @@ button, .btn, .icon-btn, .nav-link, .chip, .tab-btn{-webkit-tap-highlight-color:
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- CUSTOMER PRICE LIST -->
+      <section class="page" id="page-pricelist">
+        <div class="price-list-toolbar no-print">
+          <div class="toolbar-left">
+            <button type="button" class="btn btn-ghost btn-sm" data-page="types"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>Back to Product List</button>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="pricelistPrintBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>Print / Save as PDF</button>
+        </div>
+        <div class="price-sheet" id="priceSheet"></div>
       </section>
 
       <!-- STORES -->
@@ -1806,12 +1904,13 @@ function confirmModal(title, msg, onYes, opts){
 }
 
 /* ---------- Navigation ---------- */
-const pages = ['dashboard','sales','restock','types','stores','summary','reports','settings'];
+const pages = ['dashboard','sales','restock','types','pricelist','stores','summary','reports','settings'];
 const pageMeta = {
   dashboard:{title:'Dashboard', sub:'Welcome back, Admin!'},
   sales:{title:'Daily Sales', sub:'Log and review every sale, store by store.'},
   restock:{title:'Add / Restock', sub:'Bring new sacks into your inventory.'},
   types:{title:'Product List', sub:'Manage rice varieties, bag sizes, and profit per sack.'},
+  pricelist:{title:'Customer Price List', sub:'A clean price sheet to show or send to customers.'},
   stores:{title:'Buyer/Store', sub:'Manage the stores and outlets you supply.'},
   summary:{title:'Summary', sub:'See totals for any date range.'},
   reports:{title:'Reports', sub:'Generate, print, or export detailed reports.'},
@@ -1840,6 +1939,7 @@ function refreshPage(name){
   if(name==='sales') renderSalesPage();
   if(name==='restock') renderRestockPage();
   if(name==='types') renderTypesPage();
+  if(name==='pricelist') renderPriceListPage();
   if(name==='stores') renderStoresPage();
   if(name==='summary') renderSummary();
   if(name==='reports') renderReport();
@@ -2767,6 +2867,7 @@ function renderAvailableStock(){
 
         toast('Stock & selling price updated.');
         if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+  if(document.getElementById('page-pricelist').classList.contains('active')) renderPriceListPage();
       }
       styleRsTypeOptions();
       updateRestockBagSize();
@@ -3109,6 +3210,7 @@ document.getElementById('restockForm').addEventListener('submit', async (e)=>{
   renderRestockTable();
   fillSaleTypeSelect(document.getElementById('saleType'));
   if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+  if(document.getElementById('page-pricelist').classList.contains('active')) renderPriceListPage();
 });
 document.getElementById('rsResetBtn').addEventListener('click', ()=>{
   document.getElementById('restockForm').reset();
@@ -3158,6 +3260,7 @@ document.getElementById('backorderForm').addEventListener('submit', async (e)=>{
   renderBackorderTable();
   fillSaleTypeSelect(document.getElementById('saleType'));
   if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+  if(document.getElementById('page-pricelist').classList.contains('active')) renderPriceListPage();
 });
 document.getElementById('boResetBtn').addEventListener('click', ()=>{
   document.getElementById('backorderForm').reset();
@@ -3468,6 +3571,65 @@ function renderTypesPage(){
     });
   });
 }
+
+/* ---------- Customer Price List ---------- */
+function renderPriceListPage(){
+  const sheet = document.getElementById('priceSheet');
+  if(!sheet) return;
+  const bizName = (DB.settings && DB.settings.bizName) || 'JLY Rice Choice';
+  const today = new Date();
+  const dateStr = today.toLocaleDateString(undefined, {year:'numeric', month:'long', day:'numeric'});
+  const list = [...DB.types].sort((a,b)=> (a.name||'').localeCompare(b.name||'', undefined, {sensitivity:'base'}));
+
+  if(list.length===0){
+    sheet.innerHTML = `<div class="empty-state"><h4>No products yet</h4><p>Add products in the Product List to build your customer price list.</p></div>`;
+    return;
+  }
+
+  const cards = list.map(t=>{
+    const costPrice = t.costPrice ?? 950;
+    const sellingPrice = t.sellingPrice ?? (costPrice + (t.profit||0));
+    const photoCell = t.photo
+      ? `<img src="${t.photo}" alt="${escapeHtml(t.name)}">`
+      : `${(t.name||'?').trim().charAt(0).toUpperCase()}`;
+    return `<div class="price-card">
+      <div class="price-card-photo">${photoCell}</div>
+      <div class="price-card-name">${escapeHtml(t.name)}</div>
+      ${t.bagSize ? `<div class="price-card-bag">${escapeHtml(t.bagSize)}</div>` : ''}
+      <div class="price-card-price">${fmtMoney(sellingPrice)}<small>per sack</small></div>
+    </div>`;
+  }).join('');
+
+  sheet.innerHTML = `
+    <div class="price-sheet-header">
+      <div>
+        <h2 class="biz-name">${escapeHtml(bizName)}</h2>
+        <p class="biz-tagline">Customer Price List</p>
+      </div>
+      <div class="sheet-meta">
+        <div>Date: <strong>${dateStr}</strong></div>
+        <div>${list.length} product${list.length===1?'':'s'}</div>
+      </div>
+    </div>
+    <div class="price-list-grid">${cards}</div>
+    <div class="price-sheet-footer">Prices are subject to change without prior notice. Thank you for your business!</div>
+  `;
+}
+document.getElementById('pricelistPrintBtn').addEventListener('click', ()=>{
+  const styleTag = document.createElement('style');
+  styleTag.id = 'pricelistPrintOrientation';
+  styleTag.textContent = '@page{size:A4 landscape; margin:10mm;}';
+  document.head.appendChild(styleTag);
+  const cleanup = ()=>{
+    const tag = document.getElementById('pricelistPrintOrientation');
+    if(tag) tag.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+  window.addEventListener('afterprint', cleanup);
+  window.print();
+  setTimeout(cleanup, 60000);
+});
+
 document.getElementById('typeForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
   const name = toProperCase(document.getElementById('typeName').value.trim());
@@ -4307,6 +4469,7 @@ document.getElementById('settingsForm').addEventListener('submit', async (e)=>{
   toast('Settings saved.');
   renderDashboard();
   if(document.getElementById('page-types').classList.contains('active')) renderTypesPage();
+  if(document.getElementById('page-pricelist').classList.contains('active')) renderPriceListPage();
   if(document.getElementById('page-restock').classList.contains('active')) renderAvailableStock();
   resetIdleTimer();
 
